@@ -1,5 +1,6 @@
 ---
-title: Les formulaires avec Remix - Partie 1
+title: "Les formulaires avec Remix - Partie 1"
+subtitle: "Les formulaire avant, après et Remix"
 ---
 
 - [Point sur les formulaires](#point-sur-les-formulaires)
@@ -10,7 +11,7 @@ title: Les formulaires avec Remix - Partie 1
 
 ## Point sur les formulaires
 
-Avec Remix, ce sont les formulaires html que l'ont utilisait il y a maintenant plusieurs années en PHP qui reviennent sur le devant de la scene.
+Avec Remix, ce sont les formulaires HTML que l'ont utilisait il y a maintenant plusieurs années en PHP qui reviennent sur le devant de la scene.
 
 Là où de nombreuses librairies/frameworks javascript ont souvent fait le choix de s'ajouter (voire de carrément remplacer) aux champs afin d'en gérer l'état et la validité, Remix lui, a plutôt pour but de s'en servir.
 
@@ -24,8 +25,8 @@ Prenons par exemple un traitement assez classique d'un champs en Javascript (san
 
 ```html
 <form>
-	<input type="text" name="username" />
-	<button type="submit">Submit</button>
+  <input type="text" name="username" />
+  <button type="submit">Submit</button>
 </form>
 ```
 
@@ -80,8 +81,8 @@ Comment utilisait-on des formulaires à une époque ou Javascript n'était pas a
 
 ```html
 <form method="post" action="/action-route">
-	<input type="text" name="username" />
-	<button type="submit">Submit</button>
+  <input type="text" name="username" />
+  <button type="submit">Submit</button>
 </form>
 ```
 
@@ -90,14 +91,14 @@ Ce morceau de code est équivalent à celui de l'autre exemple car c'est tout ce
 
 Aucun code ici, le navigateur s'occupe lui même de l'envoi des données, et de la sérialisation de celles-ci.
 
-Si on change la méthode du formulaire en `get` et qu'on fait un envoi, on peut jeter un coup d'oeil à l'url pour voir quelles sont les données :
+Si on change la méthode du formulaire en `get` et qu'on fait un envoi, on peut jeter un coup d’œil à l'URL pour voir quelles sont les données :
 
 `https://example.com/?username=Quentin`
 
 Plutôt pas mal, mais alors pourquoi on s'embête à tout refaire à la main me demanderez vous ?  
 Hé bien il y a un truc qu'on ne peut pas représenter dans ces pages, mais qui pourtant est très important, c'est que la méthode "old school" nécessite un rafraichissement complet de page. 😕
 
-Lorsqu'on appui sur "Submit", le navigateur effectue une requête du type de notre attribut `method` (`post` ou `get` la plupart du temps) à l'url de notre attribut `action` (la même url si l'attribut n'est pas défini)
+Lorsqu'on appui sur "Submit", le navigateur effectue une requête du type de notre attribut `method` (`post` ou `get` la plupart du temps) à l'URL de notre attribut `action` (la même URL si l'attribut n'est pas défini)
 
 Une fois cette page visitée avec les informations du formulaire, notre serveur va avoir l'occasion de traiter ces données puis de rediriger le client vers une autre page (pour voir le résultat de notre action par exemple).  
 Cette manipulation force donc le navigateur à recharger complètement la page, rendant les applications dites SPA (_Single Page Application_) très peu performantes (voire inutilisables), les script devant se recharger et se ré-exécuter.
@@ -132,7 +133,7 @@ export let action: ActionFunction = async ({request}) => {
     // { name: "Quentin", email: "quentin@widlocher.com" }
 
     // Example d'appel à un service de gestion de données
-    db.user.create(formObj)
+    return db.user.create(formObj)
 }
 
 // On déclare ensuite la fonction par défaut qui sera notre page
@@ -162,8 +163,8 @@ Si vous êtes curieux, voilà à quoi ressemble ce qu'on appelle `entries` :
 
 ```javascript
 [
-	["name", "Quentin"],
-	["email", "quentin@widlocher.com"],
+  ["name", "Quentin"],
+  ["email", "quentin@widlocher.com"],
 ];
 ```
 
@@ -197,7 +198,13 @@ export default SimpleFormPage() {
 }
 ```
 
-Vous avez vu la différence ? On n'utilise plus un `<form>` html mais un composant [`<Form>`](https://remix.run/docs/en/v1/api/remix#form) de remix.  
-Ce composant possède globalement les mêmes attributs que son compère html, mais s'occupe de contacter notre serveur à l'aide d'une requête `fetch` comme dans notre premier exemple.
+Vous avez vu la différence ? On n'utilise plus un `<form>` HTML mais un composant [`<Form>`](https://remix.run/docs/en/v1/api/remix#form) de remix.  
+Ce composant possède globalement les mêmes attributs que son compère HTML, mais s'occupe de contacter notre serveur à l'aide d'une requête `fetch` comme dans notre premier exemple.
 
 Cette requête ne rafraîchit donc plus la page, mais Remix s'occupe de récupérer la réponse du serveur et de le mettre à jour (à l'aide d'une seconde requête dite de revalidation)
+
+---
+
+Voilà pour cette petite (ré)vision des formulaire tels qu'on les faisait avant, après et avec Remix.
+
+Prochain chapitre, la validation d'un formulaire avec Remix.
