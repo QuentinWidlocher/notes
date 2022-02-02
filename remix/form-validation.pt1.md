@@ -137,7 +137,7 @@ export let action: ActionFunction = async ({request}) => {
 }
 
 // On déclare ensuite la fonction par défaut qui sera notre page
-export default SimpleFormPage() {
+export default function SimpleFormPage() {
     return (
         <form method="post">
             <label htmlFor="name">Full Name</label>
@@ -183,18 +183,18 @@ Mais quand même, on aimerais éviter que la page se rafraichisse si possible, �
 Pour ça, il nous faut changer uniquement deux lettres (et un import) :
 
 ```tsx
-export default SimpleFormPage() {
-    return (
-        <Form method="post">
-            <label htmlFor="name">Full Name</label>
-            <input type="text" name="name" />
+export default function SimpleFormPage() {
+  return (
+    <Form method="post">
+      <label htmlFor="name">Full Name</label>
+      <input type="text" name="name" />
 
-            <label htmlFor="email">Email</label>
-            <input type="email" name="email" />
+      <label htmlFor="email">Email</label>
+      <input type="email" name="email" />
 
-            <button type="submit">Submit</button>
-        </Form>
-    )
+      <button type="submit">Submit</button>
+    </Form>
+  );
 }
 ```
 

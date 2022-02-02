@@ -63,6 +63,11 @@ Un exemple assez simple de validation possible :
 ```ts
 // Ici, FormObject est un type qui ressemble à nos champs
 function validateForm(formObj: FormObject) {
+  // S'assure qu'un nom a été donnée
+  if (!formObj.name) {
+    return;
+  }
+
   // Valide l'email avec une regex un peu énervée
   if (
     !/^(([^<>()[\]\.,;:\s@\"]+(\.[^<>()[\]\.,;:\s@\"]+)*)|(\".+\"))@(([^<>()[\]\.,;:\s@\"]+\.)+[^<>()[\]\.,;:\s@\"]{2,})$/i.test(
@@ -92,10 +97,8 @@ Plus qu'a empêcher l'action de se produire en retournant une valeur avant l'ajo
 
 ```ts
 export let action: ActionFunction = async ({request}) => {
-    // On récupère les données du formulaire
     let formData = await request.formData()
 
-    // On transforme ces données en objet:
     let formObj = Object.fromEntries(formData.entries()
 
     // On valide les données
@@ -121,6 +124,11 @@ Dans notre fonction `validateForm()`, plus question de retourner un simple bool�
 function validateForm(formObj: FormObject) {
   let errors: string[] = [];
 
+  // S'assure qu'un nom a été donnée
+  if (!formObj.name) {
+    errors.push("Un nom est requis");
+  }
+
   // Valide l'email avec une regex un peu énervée
   if (
     !/^(([^<>()[\]\.,;:\s@\"]+(\.[^<>()[\]\.,;:\s@\"]+)*)|(\".+\"))@(([^<>()[\]\.,;:\s@\"]+\.)+[^<>()[\]\.,;:\s@\"]{2,})$/i.test(
@@ -144,9 +152,99 @@ function validateForm(formObj: FormObject) {
 }
 ```
 
-Maintenant, on peux retourner les erreurs
+Maintenant, on peux retourner les erreurs à notre utilisateur via la réponse de l'action
+
+```ts
+export let action: ActionFunction = async ({request}) => {
+    let formData = await request.formData()
+
+    let formObj = Object.fromEntries(formData.entries()
+
+    // On valide les données
+    let errors = validateForm(formObj)
+    if (errors.length > 0) {
+        // On retourne un objet avec les erreurs
+        return {
+          success: false,
+          errors,
+        }
+    }
+
+    // On retourne un objet avec le résultat
+    return {
+      success: true,
+      data: await db.user.create(formObj)
+    }
+}
+```
+
+Maintenant, avec un peu de _magie Typescript_ on peux récupérer nos erreurs proprement coté client
+
+```tsx
+// On déclare un type avec une union pour gérer le succès et l'échec
+// Comme ça quand on regarde juste `obj.success`, Typescript sait s'il
+// doit chercher une propriété `data` ou `errors`
+type ActionPayload =
+  | {
+      success: true;
+      data: User; // on imagine un type lié à celui retourné par la bdd
+    }
+  | {
+      success: false;
+      errors: string[];
+    };
+
+export default function SimpleFormPage() {
+  // On récupère ce que l'action nous renvoi
+  let actionData = useActionData<ActionPayload>();
+
+  // On se sert du type pour extraire une liste d'erreur
+  let errors = actionData.success ? [] : actionData.errors;
+
+  // On affiche la liste des erreurs au dessus de notre formulaire
+  return (
+    <section>
+      {errors.length > 0 ? (
+        <ul>
+          {errors.map((error) => (
+            <li>{error}</li>
+          ))}
+        </ul>
+      ) : null}
+      <form method="post">{/* [...] */}</form>
+    </section>
+  );
+}
+```
+
+Plutôt pas mal ! On pourrais aussi renvoyer un dictionnaire champ/erreurs sous la forme d'un objet pour avoir le détail des champs de leurs erreurs spécifique.
+
+Mais déjà pour l'instant, cette solution est tout à fait envisageable et fonctionne dans de nombreux cas.
 
 ## Validation automatique
+
+Allons encore plus loin avec un validateur automatique, l'idée est de créer une fonction de validation qui pourrais nous permettre de :
+
+- Déterminer automatiquement le type de l'objet d'erreur
+- Créer et gérer plus facilement les erreurs, voire des les grouper par champs
+- Générer automatique un objet formaté avec les erreurs, dans la même forme que le formulaire
+
+Évidement pour pouvoir faire autant sans y passer des heures, on va pouvoir se servir d'un outil très performant : [zod](https://github.com/colinhacks/zod)
+
+Zod est un ~~validateur~~ parser, qui permet de créer des fonctions de validations, lui donner un objet et de récupérer un _autre objet_ qui lui est correct.  
+C'est cette nuance qui fait de zod un parser plutôt qu'un validateur. (Pour plus d'information technique sur cette nuance, vous pouvez [lire l'inspiration de zod ici]([https://lexi-lambda.github.io/blog/2019/11/05/parse-don-t-validate/]))
+
+Le fonctionnement est très simple, on construit un validateur avec les fonctions de zod pour faire un schéma ressemblant à notre objet final, exemple complet avec notre formulaire :
+
+```ts
+let validator = z.object({
+  name: z.string().required("Un nom est requis"),
+  email: z.string().email("L'email est invalide"),
+  phone: "06",
+  password: "hunter2",
+  passwordConf: "hunter3",
+});
+```
 
 ## Affichage des erreurs automatique
 
