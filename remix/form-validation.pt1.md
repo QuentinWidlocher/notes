@@ -1,6 +1,6 @@
 ---
 title: "Les formulaires avec Remix - Partie 1"
-subtitle: "Les formulaire avant, après et Remix"
+subtitle: "Les formulaires avant, après et Remix"
 ---
 
 - [Point sur les formulaires](#point-sur-les-formulaires)

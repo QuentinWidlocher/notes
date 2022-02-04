@@ -3,6 +3,12 @@ title: "Les formulaires avec Remix - Partie 2"
 subtitle: "Valider un formulaire et gérer les erreurs"
 ---
 
+- [Validation classique](#validation-classique)
+- [Affichage des erreurs classique](#affichage-des-erreurs-classique)
+- [Validation automatique](#validation-automatique)
+- [Affichage des erreurs automatique](#affichage-des-erreurs-automatique)
+- [Avec un composant d'erreur](#avec-un-composant-derreur)
+
 ## Validation classique
 
 Reprenons notre example précédent et ajoutons quelques champs afin de rentre les choses intéressantes :
@@ -46,7 +52,7 @@ export let action: ActionFunction = async ({request}) => {
      *      email: "quentin@widlocher",
      *      phone: "06",
      *      password: "hunter2",
-     *      passwordConf: "hunter3",
+     *      passwordConfirm: "hunter3",
      * }
      */
 
@@ -83,8 +89,13 @@ function validateForm(formObj: FormObject) {
   }
 
   // S'assure que les mots de passe sont identiques
-  if (formObj.password != formObj.passwordConf) {
+  if (formObj.password != formObj.passwordConfirm) {
     return false;
+  }
+
+  // S'assure que les mots de passe sont identiques
+  if (formObj.password != formObj.passwordConfirm) {
+    return false:
   }
 
   return true;
@@ -114,7 +125,7 @@ export let action: ActionFunction = async ({request}) => {
 
 Bon, pas mal, mais l'utilisateur n'a aucune idée que son envoi s'est mal passé 😅
 
-Il va juste cliquer sur le bouton "Submit" puis voir son formulaire se vider sans aucune autre information.  
+Il va juste cliquer sur le bouton "Submit" puis... rien du tout en fait.
 Il faut donc lui afficher la liste des erreurs de son formulaire
 
 Dans notre fonction `validateForm()`, plus question de retourner un simple booléen, on va devoir retourner la liste des erreurs :
@@ -129,7 +140,7 @@ function validateForm(formObj: FormObject) {
     errors.push("Un nom est requis");
   }
 
-  // Valide l'email avec une regex un peu énervée
+  // Valide l'email avec une regex un peu énervée, sortie de mon chapeau (ou pas)
   if (
     !/^(([^<>()[\]\.,;:\s@\"]+(\.[^<>()[\]\.,;:\s@\"]+)*)|(\".+\"))@(([^<>()[\]\.,;:\s@\"]+\.)+[^<>()[\]\.,;:\s@\"]{2,})$/i.test(
       formObj.email
@@ -143,8 +154,13 @@ function validateForm(formObj: FormObject) {
     errors.push("Le numéro de téléphone doit faire 10 chiffres");
   }
 
+  // S'assure que le mot de passe fait un minumum de lettres
+  if (formObj.password?.length < 6) {
+    errors.push("Le mot de passe doit faire au minimum 6 caractères");
+  }
+
   // S'assure que les mots de passe sont identiques
-  if (formObj.password != formObj.passwordConf) {
+  if (formObj.password != formObj.passwordConfirm) {
     errors.push("Les mots de passes ne correspondent pas");
   }
 
@@ -152,7 +168,7 @@ function validateForm(formObj: FormObject) {
 }
 ```
 
-Maintenant, on peux retourner les erreurs à notre utilisateur via la réponse de l'action
+Maintenant, on peut retourner les erreurs à notre utilisateur via la réponse de l'action
 
 ```ts
 export let action: ActionFunction = async ({request}) => {
@@ -178,7 +194,7 @@ export let action: ActionFunction = async ({request}) => {
 }
 ```
 
-Maintenant, avec un peu de _magie Typescript_ on peux récupérer nos erreurs proprement coté client
+Maintenant, avec un peu de _magie Typescript_ (aussi appelé [Discriminated Union](https://thoughtbot.com/blog/the-case-for-discriminated-union-types-with-typescript)) on peut récupérer nos erreurs proprement coté client
 
 ```tsx
 // On déclare un type avec une union pour gérer le succès et l'échec
@@ -217,7 +233,7 @@ export default function SimpleFormPage() {
 }
 ```
 
-Plutôt pas mal ! On pourrais aussi renvoyer un dictionnaire champ/erreurs sous la forme d'un objet pour avoir le détail des champs de leurs erreurs spécifique.
+Plutôt pas mal ! On pourrais aussi renvoyer un dictionnaire champ/erreurs sous la forme d'un objet pour avoir le détail des champs et de leurs erreurs spécifique.
 
 Mais déjà pour l'instant, cette solution est tout à fait envisageable et fonctionne dans de nombreux cas.
 
@@ -227,7 +243,7 @@ Allons encore plus loin avec un validateur automatique, l'idée est de créer un
 
 - Déterminer automatiquement le type de l'objet d'erreur
 - Créer et gérer plus facilement les erreurs, voire des les grouper par champs
-- Générer automatique un objet formaté avec les erreurs, dans la même forme que le formulaire
+- Générer automatiquement un objet formaté avec les erreurs, dans la même forme que le formulaire
 
 Évidement pour pouvoir faire autant sans y passer des heures, on va pouvoir se servir d'un outil très performant : [zod](https://github.com/colinhacks/zod)
 
@@ -240,12 +256,345 @@ Le fonctionnement est très simple, on construit un validateur avec les fonction
 let validator = z.object({
   name: z.string().required("Un nom est requis"),
   email: z.string().email("L'email est invalide"),
-  phone: "06",
-  password: "hunter2",
-  passwordConf: "hunter3",
+  phone: z
+    .string()
+    .length(10, { message: "Le numéro de téléphone doit faire 10 chiffres" }),
+  password: z
+    .string()
+    .min(6, { message: "Le mot de passe doit faire au minimum 6 caractères" }),
+  passwordConfirm: z.string(),
 });
 ```
 
+Ici, on peux donner la plupart de nos règles de validation, à l'exception des mots de passes qui doivent êtres identiques.
+
+Pour affiner notre validateur, zod nous propose de chaîner une fonction `refine()` qui s'applique à tout notre objet :
+
+```ts
+let validator = z
+  .object({
+    name: z.string().required("Un nom est requis"),
+    email: z.string().email("L'email est invalide"),
+    phone: z
+      .string()
+      .length(10, { message: "Le numéro de téléphone doit faire 10 chiffres" }),
+    password: z.string().min(6, {
+      message: "Le mot de passe doit faire au minimum 6 caractères",
+    }),
+    passwordConfirm: z.string(),
+  })
+  .refine((obj) => obj.password === obj.passwordConfirm, {
+    message: "Les mots de passes ne correspondent pas",
+    path: ["passwordConfirm"],
+  });
+```
+
+Le premier paramètre de `refine()` est une fonction qui valide quelque chose à la manière d'un `assert` et le second est un objet qui nous permet de spécifier un message d'erreur, mais aussi où le mettre (on va voir ça juste après)
+
+Au passage, la validation de l'email sans fait sans douleur grâce à zod. (Maintenant vous savez d'où j'ai tiré ma regex tout à l'heure)
+
+Une fois qu'on a notre validateur (qui est en fait un parser), on va pouvoir l'intégrer dans notre action pour remplacer notre fonction
+
+```ts
+export let action: ActionFunction = async ({request}) => {
+    let formData = await request.formData()
+
+    // On valide les données
+    let formObj = validator.safeParse(Object.fromEntries(formData.entries())
+
+    // Si l'objet n'est pas valide, on retourne les erreurs
+    if (!formObj.success) {
+      return {
+        success: false,
+        errors: formObj.error.format()
+      }
+    }
+
+    // On retourne un objet avec le résultat
+    return {
+      success: true,
+      data: await db.user.create(formObj.data)
+    }
+}
+```
+
+C'est pratiquement le même code, à la différence qu'on utilise zod plutôt que notre fonction. Au passage, on a utilisé `safeParse()` qui renvoi un objet qui stipule `success` ainsi que `data` ou `error`, on aurait aussi pu utiliser `parse()` qui nous aurait retourné notre objet, ou aurait levé une erreur qu'il aurait fallu catch, c'est au choix.
+
+Mais Typescript s'énerve !  
+Notre type de ce que renvoi notre action, `ActionPayload`, indique `errors: string[]` alors que zod ne nous renvoi plus ça du tout.
+
+Que nous renvoit donc zod lorsqu'on appelle `formObj.error.format()` alors ?
+
+```ts
+{
+  _errors: [],
+  name: { _errors: ["Un nom est requis"] },
+  email: { _errors: ["L'email est invalide"] },
+  phone: { _errors: ["Le numéro de téléphone doit faire 10 chiffres"] },
+  password: { _errors: ["Le mot de passe doit faire au minimum 6 caractères"] },
+  // C'est pour mettre l'erreur ici qu'on a indiqué `path: ["passwordConfirm"]` tout à l'heure
+  passwordConfirm: { _errors: ["Les mots de passes ne correspondent pas"] },
+}
+```
+
+Un objet qui, pour chaque champ (même les objets), possède une liste de messages d'erreurs.  
+Cette façon d'écrire les erreurs est parfaite pour afficher proprement chaque erreur sous son champ directement, plutôt que d'afficher une liste en haut de notre formulaire.
+
+De plus, puisque zod a été créé avec Typescript en tête, il est possible d'extraire de notre validateur :
+
+- La représentation de l'objet donnée par notre formulaire
+
+  ```ts
+  type FormData = z.infer<typeof validator>;
+
+  // Juste pour l'explication
+  type FormDataEquivalent = {
+    name: string;
+    email: string;
+    phone: string;
+    password: string;
+    passwordConfirm: string;
+  };
+  ```
+
+- La représentation de l'objet d'erreurs donnée par notre validateur
+
+  ```ts
+  type FormDataErrors = z.ZodFormattedError<FormData>;
+
+  // Juste pour l'explication
+  type FormDataErrorsEquivalent = {
+    _errors: string[];
+    name: { _errors: string[] };
+    email: { _errors: string[] };
+    phone: { _errors: string[] };
+    password: { _errors: string[] };
+    passwordConfirm: { _errors: string[] };
+  };
+  ```
+
+Et bien sûr, ces deux types vont changer automatiquement quand on va modifier notre validateur. 😍
+
+Il ne reste plus qu'a remplacer `errors: string[]` dans le type `ActionPayload` par `errors: FormDataErrors`.
+
 ## Affichage des erreurs automatique
 
+Maintenant qu'on a notre validation automatique, lié à notre formulaire, et que cette validation nous retourne la liste des erreurs correctement formatée, on va pouvoir afficher nos erreurs sous nos champs, façon [Material Design](https://material.io/archive/guidelines/patterns/errors.html).
+
+```tsx
+export default function SimpleFormPage() {
+  // On récupère ce que l'action nous renvoi
+  let actionData = useActionData<ActionPayload>();
+
+  // On se sert du type pour extraire nos erreurs
+  let errors = actionData.success ? [] : actionData.errors;
+
+  // On affiche les erreurs sous nos champs directement
+  return (
+    <section>
+      <form method="post">
+        <label htmlFor="name">Full Name</label>
+        <input type="text" name="name" required />
+        {errors?.name?._errors?.length > 0 ? (
+          <small>{errors?.name?._errors[0]}</small>
+        ) : null}
+
+        <label htmlFor="email">Email</label>
+        <input type="email" name="email" />
+        {errors?.email?._errors?.length > 0 ? (
+          <small>{errors?.email?._errors[0]}</small>
+        ) : null}
+
+        <label htmlFor="phone">Phone number</label>
+        <input type="number" name="phone" />
+        {errors?.phone?._errors?.length > 0 ? (
+          <small>{errors?.phone?._errors[0]}</small>
+        ) : null}
+
+        <label htmlFor="password">Password</label>
+        <input type="password" name="password" />
+        {errors?.password?._errors?.length > 0 ? (
+          <small>{errors?.password?._errors[0]}</small>
+        ) : null}
+
+        <label htmlFor="passwordConfirm">Password confirmation</label>
+        <input type="password" name="passwordConfirm" />
+        {errors?.passwordConfirm?._errors?.length > 0 ? (
+          <small>{errors?.passwordConfirm?._errors[0]}</small>
+        ) : null}
+
+        <button type="submit">Submit</button>
+        {
+          // Celui là affiche les erreurs liés à notre z.object()
+          // On ne s'en sert pas dans l'exemple mais sachez le
+          errors?._errors?.length > 0 ? (
+            <small>{errors?._errors[0]}</small>
+          ) : null
+        }
+      </form>
+    </section>
+  );
+}
+```
+
+Et voilà on a nos erreurs sous les yeux, et directement placé aux bons endroits.
+
+Il nous a juste fallu récupérer notre liste d'erreurs et d'afficher une balise quand on a au moins une erreur dans la liste.  
+On aurait bien sûr pu afficher la liste complète dans le cas ou un champ doit respecter plusieurs règles à la fois. (ex: requis + minimum 6 lettres + regex)
+
 ## Avec un composant d'erreur
+
+Bien entendu, vos cœurs de développeurs ont dû se serrer en lisant le code d'affichage des erreurs, tellement de répétition pour un affichage pourtant si simple.  
+C'est le moment idéal pour un composant :
+
+```tsx
+type ErrorMessageProps = {
+  error?: { _errors?: string[] };
+  onlyFirst?: boolean;
+  className?: string;
+};
+
+/**
+ * Afffiche une liste d'erreur (ou une seule erreur) depuis un ZodFormattedErrors
+ */
+export default function ErrorMessage({
+  error,
+  className = "",
+  onlyFirst = true,
+}: ErrorMessageProps) {
+  return error?._errors?.length ? (
+    <small className={className}>
+      {onlyFirst
+        ? error._errors[0]
+        : error._errors.map((e, i, l) => (
+            <span key={e}>
+              {e} {i <= l.length ? <br /> : null}
+            </span>
+          ))}
+    </small>
+  ) : null;
+}
+```
+
+Ce composant s'occupe simplement de prendre une extrémité d'un ZodFormattedError et d'afficher une ou toutes les erreurs à la ligne.
+
+Voilà comment l'utiliser avec notre formulaire :
+
+```tsx
+export default function SimpleFormPage() {
+  let actionData = useActionData<ActionPayload>();
+
+  let errors = actionData.success ? [] : actionData.errors;
+
+  return (
+    <section>
+      <form method="post">
+        <label htmlFor="name">Full Name</label>
+        <input type="text" name="name" required />
+        <ErrorMessage error={errors?.name} />
+
+        <label htmlFor="email">Email</label>
+        <input type="email" name="email" />
+        <ErrorMessage error={errors?.email} />
+
+        <label htmlFor="phone">Phone number</label>
+        <input type="number" name="phone" />
+        <ErrorMessage error={errors?.phone} />
+
+        <label htmlFor="password">Password</label>
+        <input type="password" name="password" />
+        <ErrorMessage error={errors?.password} />
+
+        <label htmlFor="passwordConfirm">Password confirmation</label>
+        <input type="password" name="passwordConfirm" />
+        <ErrorMessage error={errors?.passwordConfirm} />
+
+        <button type="submit">Submit</button>
+        <ErrorMessage error={errors}>
+      </form>
+    </section>
+  );
+}
+```
+
+---
+
+Et voilà, plus qu'à changer/ajouter/retirer de champs de votre formulaire, de synchroniser vos changement dans votre validateur et vous aurez toujours un formulaire correct, capable d'afficher ses erreurs proprement !
+
+Dans le prochain chapitre, on verra comment pousser encore un peu plus loin pour avoir des formulaires complexe, fait d'objets imbriqués, de dates et de tableaux.
+
+<details>
+<summary>Voir le code complet</summary>
+
+```tsx
+type FormData = z.infer<typeof validator>;
+type FormDataErrors = z.ZodFormattedError<FormData>;
+
+type ActionPayload =
+  | {
+      success: true;
+      data: User;
+    }
+  | {
+      success: false;
+      errors: FormDataErrors;
+    };
+
+export let action: ActionFunction = async ({request}) => {
+    let formData = await request.formData()
+
+    // On valide les données
+    let formObj = validator.safeParse(Object.fromEntries(formData.entries())
+
+    // Si l'objet n'est pas valide, on retourne les erreurs
+    if (!formObj.success) {
+      return {
+        success: false,
+        errors: formObj.error.format()
+      }
+    }
+
+    // On retourne un objet avec le résultat
+    return {
+      success: true,
+      data: await db.user.create(formObj.data)
+    }
+}
+
+export default function SimpleFormPage() {
+  let actionData = useActionData<ActionPayload>();
+
+  let errors = actionData.success ? [] : actionData.errors;
+
+  return (
+    <section>
+      <form method="post">
+        <label htmlFor="name">Full Name</label>
+        <input type="text" name="name" required />
+        <ErrorMessage error={errors?.name} />
+
+        <label htmlFor="email">Email</label>
+        <input type="email" name="email" />
+        <ErrorMessage error={errors?.email} />
+
+        <label htmlFor="phone">Phone number</label>
+        <input type="number" name="phone" />
+        <ErrorMessage error={errors?.phone} />
+
+        <label htmlFor="password">Password</label>
+        <input type="password" name="password" />
+        <ErrorMessage error={errors?.password} />
+
+        <label htmlFor="passwordConfirm">Password confirmation</label>
+        <input type="password" name="passwordConfirm" />
+        <ErrorMessage error={errors?.passwordConfirm} />
+
+        <button type="submit">Submit</button>
+        <ErrorMessage error={errors}>
+      </form>
+    </section>
+  );
+}
+```
+
+</details>
