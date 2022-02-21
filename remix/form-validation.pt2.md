@@ -323,7 +323,7 @@ C'est pratiquement le même code, à la différence qu'on utilise zod plutôt qu
 Mais Typescript s'énerve !  
 Notre type de ce que renvoi notre action, `ActionPayload`, indique `errors: string[]` alors que zod ne nous renvoi plus ça du tout.
 
-Que nous renvoit donc zod lorsqu'on appelle `formObj.error.format()` alors ?
+Que nous renvoi donc zod lorsqu'on appelle `formObj.error.format()` alors ?
 
 ```ts
 {
