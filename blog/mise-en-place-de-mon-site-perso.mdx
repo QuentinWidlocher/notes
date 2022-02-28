@@ -1,0 +1,173 @@
+---
+title: Mise en place de mon site perso - Partie 1
+subtitle: Pourquoi le refaire et comment ?
+cover:
+  src: https://images.pexels.com/photos/725636/pexels-photo-725636.jpeg
+  alt: Unrelated picture of a small town
+---
+
+## Intro
+
+J'avais déjà fait un site perso il y a quelques temps, sur lequel j'entreposais les différents projets sur lesquels je travaillait.
+
+C'était un site statique fait avec [Astro](https://astro.build/) et les données étaient stockées dans un CMS [Prismic](https://prismic.io/).
+
+Ca fonctionnait pas trop mal mais chaque nouveau projet, ou chaque correction demandais une recréation complète du site ainsi qu'un nouvel upload. (et en plus il était pas très beau)
+
+## Pourquoi le refaire ?
+
+### Par besoin (?)
+
+J'aimerais pouvoir dire que c'est pour gérer plus de traffic, ou parce que j'ai besoin de plus de fonctionnalités, de performances etc.  
+En fait pas du tout, aujourd'hui personne ne fréquente ce site mais ce n'est pas important pour moi.
+
+Quand Kent C. Dodds a refait son site avec Remix (quelques semaines avant la sortie open source de ce dernier), il m'a donné envie de refaire le mien, alors que je n'en avait pas besoin du tout.
+
+Il a décrit son site comme étant "over-engineered", bien trop complexe pour son besoin principal. Un simple site statique aurait pu suffire dans son cas mais ce n'est pas ce qu'il a cherché à faire.  
+Il a cherché à faire en sorte que son site _le représente_, que ça devienne une vitrine de son savoir.
+
+Et c'est exactement ce que j'ai voulu faire avec ce site, j'ai voulu en faire _trop_ pour repousser un peu la limite de ce qui est requis pour un simple site personnel, simplement pour pouvoir en être fier et avoir un site qui, je l'espère me représente.  
+(je ne suis pas en train de dire que je suis quelqu'un de compliqué pour rien hein !)
+
+### Pour écrire
+
+Aussi, je voulais me mettre à écrire des articles comme celui-ci.
+
+J'avais déjà un système assez performant pour écrire du texte en markdown (pour [ma thèse](https://github.com/QuentinWidlocher/ThesePro)) et j'aime bien écrire comme ça.
+
+J'avais déjà posté un ou deux articles sur Medium mais... je trouve vraiment pas ça terrible, l'absence de syntaxe de couleur sur le code m'embête vraiment et je préfèrerais passer plus de temps à écrire du contenu qu'a copier/coller un à un les morceaux de code dans un gist pour ensuite les intégrer dans l'article Medium.
+
+Si vous aussi vous êtes développeur, vous me comprendrez sûrement, c'est beaucoup plus intéressant de développer la solution idéale pour faire quelque chose, que de faire cette chose directement.  
+Dans mon cas le développement de ce site était plus attirant que d'écrire du contenu sur une autre plate-forme.
+(et je fait maintenant d'une pierre deux coups car je peux écrire sur le développement de ce site c'est très méta)
+
+## Comment le refaire ?
+
+### Quelle question
+
+Avec Remix voyons !
+
+Non blague à part, l'approche statique du site précédent était assez bloquante, j'avais déjà voulu écrire des articles de blog mais la recompilation de tout le site à chaque fois me décourageait pas mal.
+
+J'aurais pu envisager de le faire avec la stack que je connais mieux à savoir React, mais l'idée d'exécuter une application coté utilisateur pour finalement n'afficher que du texte est un peu étrange, voire dommage.
+
+Quand Remix est devenu open source, j'ai tout de suite sauté sur l'occasion pour apprendre son fonctionnement et je suis bien entendu tombé amoureux.  
+Chaque optimisation que je découvrais, j'en apprenais une autre, et encore une autre.
+
+J'ai commencé par développer [Sheikah Diary](sheikah-diary.netlify.app/) pour faire mes armes, puis j'ai continué à faire joujou avec Remix avec ma [Remix Template](https://github.com/QuentinWidlocher/remix-template) jusqu'a obtenir une solide compréhension des principes de Remix.
+
+C'est là que j'ai eu le déclic et que j'ai commencé à refondre mon site.
+
+J'ai appris tellement de chose sur le server side rendering, le cache HTTP et CDN et l'optimisation des performances, que j'ai voulu essayer d'avoir un site bien trop optimisé pour son scope.
+
+Je rentrerais dans les détails plus tard, mais aujourd'hui je pense avoir un système très bien huilé qui est à la fois performant pour l'utilisateur et économe en ressource. (tout ce qu'il me manque c'est des utilisateurs 🙃)
+
+### Plus de CMS
+
+J'en avais marre de devoir mettre à jour mes données dans mon CMS à chaque nouveau projet, mais en même temps je voulais avoir un grand contrôle des projets que j'affiche sur mon site.
+
+Quand j'ai réalisé que 90% de mes projets étaient sur Github, j'ai décidé d'en faire mon CMS.
+
+#### Choisir mes projets
+
+Sur mon ancien site, j'avait trié mes projets par ordre de dernière modifications pour qu'on puisse facilement trouver mes derniers projets.
+
+Ca nécessitait bien entendu de mettre à jour cette info dans mon CMS à chaque fois que je reprenais un projet plus ancien (ce qui arrive bien rarement héhé...) et bien entendu de reconstruire le site pour cette simple modification.
+
+En passant sur Github, j'était confronté à un autre problème, tous mes repos étaient affichés, même les repos les moins intéressants que je ne souhaitait pas forcément mettre en avant.
+
+Pour corriger ce problème, je n'affiche maintenant que les repos qui ont au moins un tag, me permettant d'avoir des données continuellement à jour et pertinentes.
+
+#### Viser les étoiles
+
+Choisir Github comme CMS m'a poussé à construire mon site autour des informations disponible dessus.  
+Par exemple, quand j'ai aperçu dans l'API la page sur les _stars_, j'ai réalisé que j'ajoutait vraiment souvent des nouveaux repos et que je les envoyait souvent à mes amis et collègues développeurs.
+
+C'est un genre de veille technologique que je met à disposition (avec une feature un peu bonus), très biaisé bien entendu (ça va beaucoup parler de web) et qui ne me coute absolument rien à entretenir.
+
+En plus c'est tellement plus rapide te retrouver un repo en passant par mon site qu'en ouvrant Github 😏
+
+### Et Tailwind bien sûr
+
+Avec le contenu, il ne reste plus qu'à mettre en page.  
+Ca fait plusieurs mois que je travailler avec [Tailwind](https://tailwindcss.com/) et je suis aussi tombé amoureux. Malheureusement, je ne l'utilise pas toujours comme il a été pensé.
+
+Ce n'est qu'assez récemment que j'ai compris l'intérêt d'arrêter d'utiliser des règles `@apply` dans des fichier CSS et de ne se concentrer qu'exclusivement sur les classes disponibles, surtout depuis la version 3 qui améliore grandement les performances et les fonctionnalités.
+
+J'ai donc l'honneur d'annoncer que ce site est constitué d'au moins 90% de pure Tailwind avec seulement deux fichiers CSS (un qui déclare une font, et un autre qui surcharge des élément CSS avec des variables Tailwind).
+
+Involontairement, j'ai même fait tout ce site sans déclarer de nouvelles valeurs dans le thème, c'est dire si Tailwind est impressionnant par défaut !
+
+Histoire de juste être méchant, avec 160,03 Ko de Bootstrap on a un site qui ressemble à tous les autres, avec 46,43 Ko de Tailwind on a un site qui ne ressemble qu'a ce qu'on désire.
+
+### Un peu de MDX pour le blog
+
+Je savais que je voulais un blog et je savais que je voulais un moyen d'afficher proprement du code bien formaté et clair à lire.
+
+Je me suis donc penché vers le MDX pour voir ce qu'il pouvait m'apporter et j'ai été... finalement assez déçu de mon utilisation par rapport au potentiel de cet outil.
+
+Après avoir mis en place un premier article en pur Markdown, j'avait déjà ma syntaxe de couleur telle que je la voulais et finalement assez peu de raison d'aller plus loin.
+
+```javascript
+let msg = "En vrai c'est la classe non ?";
+
+function print() {
+	console.log(
+		`${msg} En plus c'est exactement le même thème que j'utilise sur mon IDE, et ça scroll correctement sur les écrans les plus étroits
+    C'est pas plus compliqué que d'écrire un bloc de code en Markdown
+    `
+	);
+}
+```
+
+J'ai quand même ajouté un composant histoire d'afficher plusieurs fichiers avec des onglets nommés. C'est pas plus mal mais c'est assez situationnel.
+
+<Tabs tabs={["Code", "Mise en abîme"]}>
+  ```html
+  <!DOCTYPE html>
+  <html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+  </head>
+  <body>
+    <h1>Coucou !</h1>
+  </body>
+  </html>
+  ```
+
+````mdx
+  <Tabs tabs={["Code", "Mise en abîme"]}>
+  ```html
+  <!DOCTYPE html>
+  <html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+  </head>
+  <body>
+    <h1>Coucou !</h1>
+  </body>
+  </html>
+  ```
+
+```mdx
+{/* R E C U R S I O N */}
+```
+
+</Tabs>
+````
+
+</Tabs>
+
+---
+
+Bref, avec ça je suis fin prêt à écrire plus souvent, donc j'espère que je m'y tiendrait.
+
+Je vais profiter de ce sujet pour aborder le fonctionnement de mon site d'un point de vu technique, et en profiter pour parler un peu de tout ce que j'ai appris avec Remix et le reste.
+
+Mais ça c'est pour la prochaine fois !
