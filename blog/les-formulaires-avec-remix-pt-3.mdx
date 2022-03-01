@@ -1,0 +1,810 @@
+---
+title: Les formulaires avec Remix - Partie 3
+subtitle: Gérer des données complexes avec nos formulaires
+createdAt: 2022-03-01T00:00:00
+cover:
+  src: https://images.pexels.com/photos/374870/pexels-photo-374870.jpeg
+  alt: Unrelated picture of a cityscape
+---
+
+Cet article fait suite à celui-ci : [Les formulaires avec Remix - Partie 2](/blog/articles/les-formulaires-avec-remix-pt-2)
+
+## Récapitulatif
+
+Dans le dernier article, on a vu comment automatiser la gestion et l'affichage des erreurs dans un formulaire remix et ça nous a fait gagner énormément de temps.  
+Maintenant, ces formulaires, aussi chouettes soient-ils, ne pousse pas le traitement de données bien loin.
+
+Si vous avez déjà joué avec des librairies de formulaire vous avez probablement l'habitude former des objets comportants plusieurs champs, et d'arranger vos formulaire autour de ces données.
+
+Sauf qu'avec les formulaire HTML, vous n'avez pas le luxe d'organiser vos données en objets, ni même en listes. Ils ne gèrent pas non plus les dates, ni les booléens vraiment.  
+Bref, ils sont bien pratique et très simple, mais ils manquent de profondeur.
+
+Notre but, c'est de pouvoir modéliser des données (via Typescript dans notre cas) et de pouvoir créer des formulaires capable de représenter ces données le plus précisément possible, le tout avec le moins de manipulations à fournir de la part du "développeur final". (En gros, le dev qui va ajouter des features, pas celui qui met en place les outils de dev)
+
+## Complexifions
+
+Tout d'abord, changeons schéma de données par un exemple plus complexe.
+
+```typescript
+interface Project {
+	title: string;
+	order: number;
+	active: boolean;
+	createdAt: Date;
+	labels: string[];
+	assigned: {
+		firstName: string;
+		lastName: string;
+	};
+}
+```
+
+On va donc gérer des "projets", c'est très conceptuel mais au moins on va pouvoir jouer avec différentes complexitées.  
+Un projet a donc un titre, un ordre (d'affichage dans une liste pourquoi pas), une notion de projet actif ou non, une date de création, une liste de libellés et une personne liée.
+
+Ce schéma va nous permettre de voir plusieurs type de données :
+
+- Les chaînes
+- Les nombres
+- Les booléens
+- Les dates
+- Les listes
+- Les objets
+
+Mais ça vous le savez déjà si vous avez lu le sommaire 😅
+
+### Les chaines
+
+Essayons maintenant une approche naïve de notre formulaire :
+
+```tsx
+<Form method="post">
+	<label htmlFor="title">Project title</label>
+	<input type="text" name="title" required />
+
+	<button type="submit">Create this project</button>
+</Form>
+```
+
+Pour le premiers champ, ça va, c'est relativement sensé. Qu'est-ce qu'on reçoit coté serveur ?
+
+```typescript
+export let action: ActionFunction = async ({ request }) => {
+	let formData = await request.formData();
+	let formDataObj = Object.fromEntries(formData.entries());
+
+	console.debug(formDataObj);
+	/*
+	 * {
+	 *  title: 'Projet un',
+	 * }
+	 */
+
+	return null;
+};
+```
+
+Là encore, c'était attendu, on peut passer à la suite.
+
+### Les nombres
+
+Ajoutons maintenant notre champs `order` qui est un nombre :
+
+```tsx {5-6}
+<Form method="post">
+	<label htmlFor="title">Project title</label>
+	<input type="text" name="title" required />
+
+	<label htmlFor="order">Order in list</label>
+	<input type="number" name="order" defaultValue={1} />
+
+	<button type="submit">Create this project</button>
+</Form>
+```
+
+Que voyons-nous coté serveur ?
+
+```
+{
+  title: 'Projet un',
+  order: '1'
+}
+```
+
+Mince, déjà le premier problème, les nombres sont envoyés sous la forme de chaînes à notre serveur.  
+Pas que les nombres d'ailleurs, mais toutes les données sont envoyés sous cette forme, c'est comme ça, c'est le fonctionnement de base des formulaires HTML, à nous de nous adapter.
+
+Ajoutons une fonction qui va nous permettre de transformer nos valeurs une à une pour obtenir des résultat plus intéressant
+
+```typescript
+// On imagine cette méthode appellée pour chaque clé de notre formDataObj
+function parseFormDataValue<ExpectedType>(value: string): ExpectedType {
+	// Une regex qui détecte les nombres positifs et négatifs à virgules ou non
+	if (/^[+-]?\d+(\.\d+)?$/.test(str)) {
+		return parseFloat(str);
+	}
+
+	return value;
+}
+```
+
+Voilà, si un nombre passe par là sous la forme d'une chaîne, il ressortira sous la forme d'un nombre.
+
+### Les booléens
+
+Ajoutons notre booléen.
+
+```tsx {8-9}
+<Form method="post">
+	<label htmlFor="title">Project title</label>
+	<input type="text" name="title" required />
+
+	<label htmlFor="order">Order in list</label>
+	<input type="number" name="order" defaultValue={1} />
+
+	<label htmlFor="active">Is the project active ?</label>
+	<input type="checkbox" name="active" />
+
+	<button type="submit">Create this project</button>
+</Form>
+```
+
+Oui, ça semble logique, une checkbox pour représenter un booléen c'est ce qu'on a toujours fait.  
+Mais que se passe-t'il si on envoi notre formulaire au serveur ?
+
+```typescript
+{
+  title: 'Projet un',
+  order: '1',
+  active: 'on'
+}
+```
+
+Hé non, pas de booléen ici mais un `'on'`. Plutôt curieux mais c'est le fonctionnement par défaut d'une checkbox html.  
+Que se passe-t'il maintenant si on décoche la checkbox ? On devrait avoir un `'off'` non ?
+
+```typescript
+{
+  title: 'Projet un',
+  order: '1'
+}
+```
+
+Ah ok, on a juste rien.  
+En même temps ça semble logique puisqu'il est impossible pour le formulaire de savoir si une checkbox est décochée ou simplement non-remplie.
+
+On peut aussi forcer la valeur à passer à la place de `'on'` en changeant l'attribut `value`.
+
+<Tabs tabs={['Formulaire', 'Valeur reçue']}>
+  ```tsx {9}
+  <Form method="post">
+    <label htmlFor="title">Project title</label>
+    <input type="text" name="title" required />
+
+    <label htmlFor="order">Order in list</label>
+    <input type="number" name="order" defaultValue={1} />
+
+    <label htmlFor="active">Is the project active ?</label>
+    <input type="checkbox" name="active" value="true" />
+
+    <button type="submit">Create this project</button>
+
+  </Form>
+  ```
+
+```typescript
+{
+  title: 'Projet un',
+  order: '1'
+  active: 'true'
+}
+```
+
+</Tabs>
+
+Mais attention, la valeur retournée sera toujours une chaîne, c'est bien `'true'` qu'on a ici et pas `true`.
+
+Il nous faudrait donc un moyen de transformer un `'on'` ou un `'true'` en `true`. Pour gérer les `false` il faudra utiliser une valeur par défaut plus tard probablement.
+
+Un truc dans ces eaux là :
+
+```typescript {1-7,14-16}
+// On indique quand même comment gérer les false
+// au cas où on les passe manuellement
+const boolKeywords = {
+	true: true,
+	on: true,
+	false: false,
+	off: false,
+};
+
+function parseFormDataValue<ExpectedType>(value: string): ExpectedType {
+	if (/^[+-]?\d+(\.\d+)?$/.test(str)) {
+		return parseFloat(str);
+	}
+
+	if (value in boolKeywords) {
+		return boolKeywords[value];
+	}
+
+	return value;
+}
+```
+
+### Les dates
+
+Ajoutons notre date.
+
+```tsx {11-12}
+<Form method="post">
+	<label htmlFor="title">Project title</label>
+	<input type="text" name="title" required />
+
+	<label htmlFor="order">Order in list</label>
+	<input type="number" name="order" defaultValue={1} />
+
+	<label htmlFor="active">Is the project active ?</label>
+	<input type="checkbox" name="active" />
+
+	<label htmlFor="createdAt">Creation date</label>
+	<input type="date" name="createdAt" />
+
+	<button type="submit">Create this project</button>
+</Form>
+```
+
+Et voyons ce que ça donne quand on valide le formulaire :
+
+```typescript
+{
+  title: 'Projet un',
+  order: '1',
+  active: 'on',
+  createdAt: '2022-02-23'
+}
+```
+
+Bon, ça c'est pas très surprenant. On notera juste ici l'absence de temps (qu'il serait possible d'ajouter avec un champ `type="time"`)
+
+Cette chaîne, on va devoir la transformer en `Date` pour pouvoir la manipuler.
+
+```typescript {10-13}
+function parseFormDataValue<ExpectedType>(value: string): ExpectedType {
+	if (/^[+-]?\d+(\.\d+)?$/.test(str)) {
+		return parseFloat(str);
+	}
+
+	if (value in boolKeywords) {
+		return boolKeywords[value];
+	}
+
+	// Grosse regex pour gérer le même format de date que celui du HTML
+	// à savoir YYYY-MM-DD et YYYY/MM/DD
+	if (
+		/^\d{4}[\/\-](0?[1-9]|1[012])[\/\-](0?[1-9]|[12][0-9]|3[01])$/.test(str)
+	) {
+		return new Date(str);
+	}
+
+	return value;
+}
+```
+
+### Les listes
+
+Maintenant, comment ajouter une liste de chaînes ? Ou une liste tout court d'ailleurs ?
+
+Il n'existe rien en HTML qui permette ça nativement et aucune convention globale, c'est donc à nous de definir un moyen d'interpréter des listes avec les moyens à notre disposition.
+
+Un moyen que j'ai vu plusieurs fois et qui est à la fois simple à mettre en place et très clair est de supposer un index à notre champ comme ceci :
+
+```tsx {14-19}
+<Form method="post">
+	<label htmlFor="title">Project title</label>
+	<input type="text" name="title" required />
+
+	<label htmlFor="order">Order in list</label>
+	<input type="number" name="order" defaultValue={1} />
+
+	<label htmlFor="active">Is the project active ?</label>
+	<input type="checkbox" name="active" />
+
+	<label htmlFor="createdAt">Creation date</label>
+	<input type="date" name="createdAt" />
+
+	<fieldset>
+		<legend>Labels</legend>
+		<input type="text" name="labels[0]" />
+		<input type="text" name="labels[1]" />
+		<input type="text" name="labels[2]" />
+	</fieldset>
+
+	<button type="submit">Create this project</button>
+</Form>
+```
+
+On peut imaginer un bouton d'ajout de champs avec React par exemple
+
+<details>
+  <summary>Voir la version plus dynamique (juste pour l'exemple)</summary>
+
+```tsx {2,21-35}
+export default function createProjectRoute() {
+	let [labelsNumber, setLabelsNumber] = useState(0);
+
+	return (
+		<Form method="post">
+			<label htmlFor="title">Project title</label>
+			<input type="text" name="title" required />
+
+			<label htmlFor="order">Order in list</label>
+			<input type="number" name="order" defaultValue={1} />
+
+			<label htmlFor="active">Is the project active ?</label>
+			<input type="checkbox" name="active" />
+
+			<label htmlFor="createdAt">Creation date</label>
+			<input type="date" name="createdAt" />
+
+			<fieldset>
+				<legend>Labels</legend>
+
+				{Array(labelsNumber)
+					.fill(0)
+					.map((_, i) => (
+						<input type="text" name={`labels[${i}]`} />
+					))}
+
+				<button type="button" onClick={() => setLabelsNumber((x) => x + 1)}>
+					Add label
+				</button>
+
+				{labelsNumber > 0 ? (
+					<button type="button" onClick={() => setLabelsNumber((x) => x - 1)}>
+						Remove last label
+					</button>
+				) : null}
+			</fieldset>
+
+			<button type="submit">Create this project</button>
+		</Form>
+	);
+}
+```
+
+Ici on garde dans un état le nombre de champs, on boucle sur une liste vide juste pour créer le bon nombre de champs et on donne la possibilité d'incrémenter et de décrementer le nombre de champs.
+
+</details>
+
+Et du coup, coté serveur on récupère :
+
+```typescript
+{
+  title: 'Projet un',
+  order: '1',
+  active: 'on',
+  createdAt: '2022-02-23',
+  'labels[0]': 'a',
+  'labels[1]': 'b',
+  'labels[2]': 'c'
+}
+```
+
+On va bien entendu devoir transformer tous les champs avec des indexes en listes.
+
+...
+
+Bon là j'ai un peu la flemme d'implémenter ça en quelques ligne tout d'un coup, ça ne va pas tenir dans notre `parseFormDataValue()` puisqu'il faut voir toutes les valeurs pour les grouper en liste.
+
+Je passe pour l'instant, peut-être que la prochaine complexité sera plus simple ? 🙃
+
+### Les objets
+
+Le même problème se pose pour les objets que pour les listes, il n'existe pas de solution en HTML et pas de convention globale.
+
+On peut appliquer la même solution cependant en utilisant le même système de notation d'objet en javascript, comme on a fait avec les indexes tout à l'heure.
+
+```tsx {21-29}
+<Form method="post">
+	<label htmlFor="title">Project title</label>
+	<input type="text" name="title" required />
+
+	<label htmlFor="order">Order in list</label>
+	<input type="number" name="order" defaultValue={1} />
+
+	<label htmlFor="active">Is the project active ?</label>
+	<input type="checkbox" name="active" />
+
+	<label htmlFor="createdAt">Creation date</label>
+	<input type="date" name="createdAt" />
+
+	<fieldset>
+		<legend>Labels</legend>
+		<input type="text" name="labels[0]" />
+		<input type="text" name="labels[1]" />
+		<input type="text" name="labels[2]" />
+	</fieldset>
+
+	<fieldset>
+		<legend>Assigned person</legend>
+
+		<label htmlFor="assigned.firstName">First name</label>
+		<input type="text" name="assigned.firstName" />
+
+		<label htmlFor="assigned.lastName">Last name</label>
+		<input type="text" name="assigned.lastName" />
+	</fieldset>
+
+	<button type="submit">Create this project</button>
+</Form>
+```
+
+Comme vous pouvez le constater, on ajoute chaque champ à la suite mais en indiquant la position dans l'objet final avec `assigned.firstName`.  
+On peut imaginer des objets plus imbriqué comme `assigned.knowledge.remix.score` voire même carrément mélanger des objets imbriqué et des listes avec `assigned.favoriteFrameworks[0].name` !
+
+Mais je m'emporte, passons à l'implémentation de ces champs infiniments imbriqués :
+
+...
+
+😩
+
+Là je jette l'éponge, on ne va pas passer une semaine à améliorer notre gestion des formulaires pour gagner 2h au total. À moins que...
+
+## `qs` le parser de querystring
+
+Bien entendu, à chaque fois qu'il faudrait créer un sous-projet pour répondre à un besoin, on peut être sûr que des gens l'ont déjà probablement fait et c'est le cas avec [`qs`](https://github.com/ljharb/qs) qui a pour but de transformer une querystring :
+
+```
+?key=value&arr[0]=a&arr[1]=b&obj.key=objvalue
+```
+
+en
+
+```typescript
+{
+  key: "value",
+  arr: [
+    "a", "b"
+  ],
+  obj: {
+    key: "objvalue"
+  },
+}
+```
+
+Et qui pourra donc transformer :
+
+```
+?title=Projet+1&order=1&active=on&createdAt=2022-02-23&labels%5B0%5D=a&labels%5B1%5D=b&labels%5B2%5D=c&assigned.firstName=Quentin&assigned.lastName=Widlocher
+```
+
+en
+
+```typescript
+{
+  title: 'Projet 1',
+  order: '1',
+  active: 'on',
+  createdAt: '2022-02-23',
+  labels: [ 'a', 'b', 'c' ],
+  assigned: { firstName: 'Quentin', lastName: 'Widlocher' }
+}
+```
+
+Super ! Mais ça ne gère pas les valeurs numériques, booléenes et de date ça.  
+(Au moins le code d'avant n'est pas à jeter !)
+
+> [Si vous voulez comprendre pourquoi `qs` ne gère pas ça](https://github.com/ljharb/qs#parsing-primitivescalar-values-numbers-booleans-null-etc)
+
+### Implémenter `qs`
+
+Pour commencer on va avoir besoin d'ajouter `qs` à notre projet
+
+<Tabs tabs={["yarn", "npm"]}>
+	```
+		yarn add qs
+		yarn add -D @types/qs
+	```
+
+    ```
+    	npm i --save qs
+    	npm i --save-dev @types/qs
+    ```
+
+</Tabs>
+
+Ensuite, pour fournir une querystring à `qs`, il va nous falloir transformer notre formData. Heureusement, il existe des méthode natives
+
+```typescript
+export let action: ActionFunction = async ({ request }) => {
+	// On récupère notre formData
+	let formData = await request.formData();
+
+	// On transforme ses entrées en une liste à deux dimensions
+	let formDataEntries = [...formData.entries()] as string[][];
+
+	// Et cette liste peut être transformé avec la classe URLSearchParams
+	let queryParams = new URLSearchParams(formDataEntries).toString();
+
+	console.debug(queryParams);
+	// title=Projet+1&order=1&active=on&createdAt=2022-02-23&labels%5B0%5D=a& ...
+
+	return null;
+};
+```
+
+Maintenant qu'on a cette querystring, on va pouvoir la parse à l'aide de `qs`
+
+```typescript {1,10}
+import qs from "qs"
+
+export let action: ActionFunction = async ({ request }) => {
+	let formData = await request.formData()
+	let formDataEntries = [...formData.entries()] as string[][]
+	let queryParams = new URLSearchParams(formDataEntries).toString()
+
+	// Ici on passe { allowDots: true } pour faire fonctionner notre
+	// écriture du style `obj.key`
+	let parsed = qs.parse(queryParams, { allowDots: true })
+
+	console.debug(parsed)
+	/*	{
+	 *		title: 'Projet 1',
+	 *		order: '1',
+	 *		active: 'on',
+	 *		createdAt: '2022-02-23',
+	 *		labels: [ 'a', 'b', 'c' ],
+	 *		assigned: { firstName: 'Quentin', lastName: 'Widlocher' }
+	 */	}
+
+	return null
+}
+```
+
+### On rajoute nos primitives
+
+Et maintenant ? Comment on parse nos primitives (dates, booléens, etc.) ?
+
+Soit on fait cette fameuse fonctions qui va boucler sur les propriétés de notre objet mais ça peut être galère puisqu'il faudrait boucler de manière récursive.
+
+Soit on profite de `qs` et de son option `decoder` qui permet... de faire exactement ce qu'on a besoin de faire !
+
+```typescript {1,10}
+import qs, { IParseOptions } from "qs";
+
+let customDecoder: IParseOptions["decoder"] = (str, decoder, charset) => {
+	// On va avoir besoin de gérer un peu plus précisement nos valeurs
+	// donc un peu plus de cambouis sur les mains
+
+	// On skip nos chaines vides
+	if (str.length === 0) {
+		return;
+	}
+
+	// On parse nos nombres
+	if (/^(\d+|\d*\.\d+)$/.test(str)) {
+		return parseFloat(str);
+	}
+
+	// On remplace les chaînes avec des mot-clés par leurs valeur
+	// (uniquement si on souhaite pouvoir passer des null et des undefined)
+	const keywords = {
+		null: null,
+		undefined,
+	};
+	if (str in keywords) {
+		// Typescript crie parce qu'il a peur d'accéder à keywords[str]
+		// malgrès notre vérification
+
+		// @ts-expect-error si on peut
+		return keywords[str];
+	}
+
+	// On parse nos booléens
+	const boolKeywords = {
+		true: true,
+		on: true,
+		false: false,
+		off: false,
+	};
+	if (str in boolKeywords) {
+		// Typescript crie parce qu'il a peur d'accéder à boolKeywords[str]
+		// malgrès notre vérification
+
+		// @ts-expect-error si on peut
+		return boolKeywords[str];
+	}
+
+	// On parse nos dates
+	if (
+		/^\d{4}[\/\-](0?[1-9]|1[012])[\/\-](0?[1-9]|[12][0-9]|3[01])$/.test(str)
+	) {
+		return new Date(str);
+	}
+
+	// Si on est arrivé là, c'est qu'on a une chaîne.
+
+	// On retire les + et les %20 à la place des espaces
+	const strWithoutPlus = str.replace(/\+/g, " ");
+	if (charset === "iso-8859-1") {
+		return strWithoutPlus.replace(/%[0-9a-f]{2}/gi, unescape);
+	}
+
+	// Et on essaye aussi de décoder le caractères du genre ? = & /
+	try {
+		return decodeURIComponent(strWithoutPlus);
+	} catch (e) {
+		return strWithoutPlus;
+	}
+};
+
+export let action: ActionFunction = async ({ request }) => {
+	let formData = await request.formData();
+	let formDataEntries = [...formData.entries()] as string[][];
+	let queryParams = new URLSearchParams(formDataEntries).toString();
+
+	let parsed = qs.parse(queryParams, {
+		allowDots: true,
+		decoder: customDecoder,
+	});
+
+	return null;
+};
+```
+
+Et le moment que vous attendiez tous, la valeur finale de `parsed` :
+
+```typescript
+{
+  title: 'Projet 1',
+  order: 1,
+  active: true,
+  createdAt: 2022-02-23T00:00:00.000Z,
+  labels: [ 'a', 'b', 'c' ],
+  assigned: { firstName: 'Quentin', lastName: 'Widlocher' }
+}
+```
+
+Tada ! 🎉
+
+Et voilà, on a désormais un outil de quelques ligne qui nous permet de passer d'une liste de champs format chaîne à des objets complexe avec des primitives et Tout
+
+Il ne reste plus qu'à brancher `zod` comme dans l'article d'avant et à vous le plaisir d'implémenter des formulaire HTML natifs !  
+Je laisse bien sûr cet exercice aux lecteurs.
+
+...
+
+Mais non bien sûr, si vous voulez profitez de toute la puissance de `zod` et de `qs` pour le traitement de vos formulaires, mais aussi plein d'autre moyens de vous faire gagner du temps et de l'énergie sur vos projets Remix, je vous invite à jeter un coup d'oeil à ma [**Template Remix**](https://github.com/QuentinWidlocher/remix-template)
+
+Vous y trouverez un moyen de lancer un projet Remix avec tout ce qui faut pour gérer une base de données, des formulaires complexes, la synchronisation des types entre le serveur et le client etc.
+
+Tailwind y est déjà intégré ainsi que Prisma et SuperJSON, si vous avez des idées, n'hesitez pas à m'en parler sur la page github 😉
+
+À bientôt j'espère !
+
+<details>
+	<summary>Code complet</summary>
+
+    ```tsx
+    import qs, { IParseOptions } from "qs";
+    import { ActionFunction, Form } from "remix";
+
+    let customDecoder: IParseOptions["decoder"] = (str, decoder, charset) => {
+    	// On va avoir besoin de gérer un peu plus précisement nos valeurs
+    	// donc un peu plus de cambouis sur les mains
+
+    	// On skip nos chaines vides
+    	if (str.length === 0) {
+    		return;
+    	}
+
+    	// On parse nos nombres
+    	if (/^(\d+|\d*\.\d+)$/.test(str)) {
+    		return parseFloat(str);
+    	}
+
+    	// On remplace les chaînes avec des mot-clés par leurs valeur
+    	// (uniquement si on souhaite pouvoir passer des null et des undefined)
+    	const keywords = {
+    		null: null,
+    		undefined,
+    	};
+    	if (str in keywords) {
+    		// Typescript crie parce qu'il a peur d'accéder à keywords[str]
+    		// malgrès notre vérification
+
+    		// @ts-expect-error si on peut
+    		return keywords[str];
+    	}
+
+    	// On parse nos booléens
+    	const boolKeywords = {
+    		true: true,
+    		on: true,
+    		false: false,
+    		off: false,
+    	};
+    	if (str in boolKeywords) {
+    		// Typescript crie parce qu'il a peur d'accéder à boolKeywords[str]
+    		// malgrès notre vérification
+
+    		// @ts-expect-error si on peut
+    		return boolKeywords[str];
+    	}
+
+    	// On parse nos dates
+    	if (
+    		/^\d{4}[\/\-](0?[1-9]|1[012])[\/\-](0?[1-9]|[12][0-9]|3[01])$/.test(str)
+    	) {
+    		return new Date(str);
+    	}
+
+    	// Si on est arrivé là, c'est qu'on a une chaîne.
+
+    	// On retire les + et les %20 à la place des espaces
+    	const strWithoutPlus = str.replace(/\+/g, " ");
+    	if (charset === "iso-8859-1") {
+    		return strWithoutPlus.replace(/%[0-9a-f]{2}/gi, unescape);
+    	}
+
+    	// Et on essaye aussi de décoder le caractères du genre ? = & /
+    	try {
+    		return decodeURIComponent(strWithoutPlus);
+    	} catch (e) {
+    		return strWithoutPlus;
+    	}
+    };
+
+    export let action: ActionFunction = async ({ request }) => {
+    	let formData = await request.formData();
+    	let formDataEntries = [...formData.entries()] as string[][];
+    	let queryParams = new URLSearchParams(formDataEntries).toString();
+
+    	let parsed = qs.parse(queryParams, {
+    		allowDots: true,
+    		decoder: customDecoder,
+    	});
+
+    	return null;
+    };
+
+    export default function Index() {
+    	return (
+    		<Form method="post">
+    		<label htmlFor="title">Project title</label>
+    		<input type="text" name="title" required />
+
+    		<label htmlFor="order">Order in list</label>
+    		<input type="number" name="order" defaultValue={1} />
+
+    		<label htmlFor="active">Is the project active ?</label>
+    		<input type="checkbox" name="active" />
+
+    		<label htmlFor="createdAt">Creation date</label>
+    		<input type="date" name="createdAt" />
+
+    		<fieldset>
+    			<legend>Labels</legend>
+    			<input type="text" name="labels[0]" />
+    			<input type="text" name="labels[1]" />
+    			<input type="text" name="labels[2]" />
+    		</fieldset>
+
+    		<fieldset>
+    			<legend>Assigned person</legend>
+
+    			<label htmlFor="assigned.firstName">First name</label>
+    			<input type="text" name="assigned.firstName" />
+
+    			<label htmlFor="assigned.lastName">Last name</label>
+    			<input type="text" name="assigned.lastName" />
+    		</fieldset>
+
+    		<button type="submit">Create this project</button>
+    		</Form>
+    	);
+    }
+
+    ```
+
+</details>
