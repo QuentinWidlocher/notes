@@ -1,0 +1,81 @@
+---
+title: Mise en place de mon site perso - Partie 2
+subtitle: Lancement du projet et choix technologiques
+createdAt: "2022-03-16T00:00:00"
+series: Mise en place de mon site perso
+lang: fr
+---
+
+## Lancement
+
+Autant j'ai passé beaucoup de temps à créer [Remix Template](https://github.com/QuentinWidlocher/remix-template) pour gagner du temps lors de la mise en place de mes projets Remix, autant dans ce cas j'ai présenti que je n'en aurais pas besoin.
+
+Remix Template fourni tout ce qu'il faut pour créer des applications, avec des formulaires intelligents, une connexion à une base de données etc.
+
+Dans le cas de mon site personnel, tout ce que j'avais besoin c'était d'ajouter Tailwind et peut-être une ou deux fonction utilitaire que j'ai copié de Remix Template.
+
+### Architecture des fichiers
+
+Pour bien travailler il faut bien ranger ~~sa chambre~~ son code c'est bien connu !
+
+Pour mes projets React j'ai pris l'habitude de me baser sur [Bulletproof React](https://github.com/alan2207/bulletproof-react), en ce qui concerne le découpage des fichiers.
+
+#### Bulletproof React
+
+Je ne vais pas détailler ici toutes les opinions apportées par Bulletproof React mais voici en tout cas ce que j'en ai emprunté et que je conserve dans un coin de ma tête pour la grande majorité de mes projets perso.
+
+Pour découper une application, je résonne d'abord en terme de _features_ (et non pas de pages, ou d'entité de base de données ou autre). Dans mon cas, j'ai réfléchi aux grandes _features_ de mon site et j'ai choisi ça :
+
+- L'aspect Accueil, c'est très vide mais c'est quand même une _feature_ pour moi
+- L'aspect Github, avec la connexion à leur API, les pages repos et stars etc.
+- L'aspect blog, avec mes posts, la connexion à mon repo d'articles etc. (je spoil)
+
+Donc mon architecture ressemble à ça :
+
+```
+app/
+├─ features/
+│  ├─ github/
+│  ├─ blog/
+│  ├─ home/
+public/
+```
+
+Ensuite, dans chaque _feature_ (et dans le dossier `app` qui représente un peu une _feature_ globale), j'ajoute ces dossiers au besoin :
+
+- `api` pour les wrappers d'API
+- `components` pour les composants
+- `loaders` pour isoler les loaders et leurs types de retour
+- `pages` pour le composant racine de chaque pages
+  - Les pages prennent uniquement des props et n'utilise pas de hooks du genre `useLoaderData()` car je veux pouvoir les réutiliser dans des contexte différent comme des modales ou autre
+- `styles` pour les rares cas où j'ai besoin de CSS custom (la font monospace dans les articles)
+- `types` pour centraliser tous les types d'une feature
+- `utils` pour toutes les petites fonctions utilitaires spécifiques
+
+### Mise en place de Tailwind
+
+Pour installer Tailwind d'une façon qui me convenais sur Remix Template, j'ai utilisé PostCSS et le plugin Tailwind.  
+Cette approche est plus flexible et permet d'installer d'autres plugins que je trouve intéressant comme `autoprefixer` par exemple.
+
+Pour mon site, j'ai décidé de n'utiliser que Tailwind "pur" sans CSS supplémentaire (dans la mesure du possible) et donc cette approche était un peu trop compliqué pour peu de chose.
+
+Je me suis donc tourné vers [remix-tailwind](https://github.com/itsMapleLeaf/remix-tailwind), un outil très simple que je vous recommande si vous avez besoin de rapidement intégrer Tailwind dans vos projets Remix.
+
+#### Remix-Tailwind
+
+Pour installer `remix-tailwind` rien de plus simple, installez les paquets npm `remix-tailwind`, `tailwindcss` et `postcss`, générez votre configuration Tailwind comme d'habitude avec `npx tailwindcss init` et ensuite il est simplement question d'ajouter une route à votre application qui aura pour but de construire le fichier CSS de Tailwind puis de le servir.
+
+La documentation conseille par exemple de créer un fichier `app/route/tailwindcss.ts` et d'y ajouter ce code très simple :
+
+```typescript
+import type { LoaderFunction } from "remix";
+import { serveTailwindCss } from "remix-tailwind";
+
+export const loader: LoaderFunction = () => serveTailwindCss();
+```
+
+D'abord on importe `remix-tailwind`, puis on déclare un loader qui aura pour but de compiler un fichier CSS avec PostCSS et de le servir en temps qu'asset statique.
+
+Dans mon cas j'avais aussi besoin de reprendre un peu la main sur Tailwind, et ajouter une pointe de CSS manuel (bah oui quand même 😁) et donc j'ai spécifié un fichier CSS en particulier à la fonction `serveTailwindCss()`.
+
+Pas besoin de plus que ça, c'est parfait pour moi !
