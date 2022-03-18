@@ -3,12 +3,15 @@ title: Mise en place de mon site perso - Partie 2
 subtitle: Lancement du projet et choix technologiques
 createdAt: "2022-03-16T00:00:00"
 series: Mise en place de mon site perso
+cover:
+  src: https://images.pexels.com/photos/11467701/pexels-photo-11467701.jpeg
+  alt: Unrelated picture of a tall glass building, by Kelly Lacy
 lang: fr
 ---
 
 ## Lancement
 
-Autant j'ai passé beaucoup de temps à créer [Remix Template](https://github.com/QuentinWidlocher/remix-template) pour gagner du temps lors de la mise en place de mes projets Remix, autant dans ce cas j'ai présenti que je n'en aurais pas besoin.
+Autant j'ai passé beaucoup de temps à créer [Remix Template](https://github.com/QuentinWidlocher/remix-template) pour gagner du temps lors de la mise en place de mes projets Remix, autant dans ce cas j'ai pressenti que je n'en aurais pas besoin.
 
 Remix Template fourni tout ce qu'il faut pour créer des applications, avec des formulaires intelligents, une connexion à une base de données etc.
 
@@ -83,7 +86,7 @@ public/
 
 ---
 
-Le découpage par features permet de très facilement regrouper des fonctionnalités sans pour autant "surdécouper". Ici, pas besoin d'avoir un dossier pour ma page "repos" et un autre pour ma page "stars" alors que ces deux pages partagent quelque chose comme 80% de leur code.
+Le découpage par features permet de très facilement regrouper des fonctionnalités sans pour autant "sur-découper". Ici, pas besoin d'avoir un dossier pour ma page "repos" et un autre pour ma page "stars" alors que ces deux pages partagent quelque chose comme 80% de leur code.
 
 Avoir un découpage par feature permet aussi de facilement configurer Typescript pour qu'il résolve des alias. Par exemple, dans mon `tsconfig.json` j'ai cette partie :
 
@@ -158,7 +161,7 @@ Sans rentrer dans les détails voilà comment j'ai fait ça.
 
 #### Le service worker
 
-Tout d'abord, le plus intéressant, le service worker lui même, appellé `sw.js` et servi comme un asset statique dans le dossier `./public`.  
+Tout d'abord, le plus intéressant, le service worker lui même, appelé `sw.js` et servi comme un asset statique dans le dossier `./public`.  
 Il écoute deux actions, la première c'est toutes les requêtes qui sortent de mon application.
 
 <Tabs tabs={['Extrait de sw.js']}>
@@ -205,9 +208,9 @@ self.addEventListener("fetch", (event) => {
 Mise à part la syntaxe qui n'est pas forcément évidente d'elle même, le fonctionnement du service worker est clair et il permet d'avoir un grand contrôle sur les données mises en cache.
 
 La deuxième action qu'écoute le service worker, c'est l'action d'activation de ce dernier, qui s'effectue au lancement d'une page.  
-Dans cette évenement, j'en profite pour supprimer du cache toutes les données qui ont probablement changé depuis ma dernière mise en production.
+Dans cet événement, j'en profite pour supprimer du cache toutes les données qui ont probablement changé depuis ma dernière mise en production.
 
-Pour purger le cache, j'utilise un système finalement très peu versatile mais extrèmement simple et efficace : un numéro de version.
+Pour purger le cache, j'utilise un système finalement très peu versatile mais extrêmement simple et efficace : un numéro de version.
 
 <Tabs tabs={['Extrait de sw.js']}>
 
@@ -288,11 +291,11 @@ export default function App() {
 </Tabs>
 
 De la même manière que Remix active ou non son `<LiveReload />`, j'ajoute mon lanceur uniquement en mode autre que `development`.  
-Encore une fois, c'est peut-être un peu smpliste, mais ça fonctionne très bien et je n'ai pas besoin de plus que ça.
+Encore une fois, c'est peut-être un peu simpliste, mais ça fonctionne très bien et je n'ai pas besoin de plus que ça.
 
 #### Le manifest
 
-Enfin, pour obtenir une belle application lors de l'installation de la PWA il faut fournir un fichier `manifest.json` qui contient des informations nécessaire comme le titre, la couleur, les icones etc. :
+Enfin, pour obtenir une belle application lors de l'installation de la PWA il faut fournir un fichier `manifest.json` qui contient des informations nécessaire comme le titre, la couleur, les icônes etc. :
 
 ```json
 {
@@ -359,6 +362,6 @@ export default function App() {
 
 Et c'est tout, maintenant, quand déployé sur une url en `https://`, certains navigateurs (comme Google Chrome notamment) invite l'utilisateur à installer le site, ce que je vous invite aussi à faire pour profiter de performances encore meilleur et de vous tenir à jour sur les prochains articles 😁
 
-Qui sait, peut-être qu'un jour j'ajouterais des notifications natives pour tenir informés les gesn qui ont installé l'application (rassurez vous c'est optionnel)
+Qui sait, peut-être qu'un jour j'ajouterais des notifications natives pour tenir informés les gens qui ont installé l'application (rassurez vous c'est optionnel)
 
 Prochain chapitre, la connexion à Github !

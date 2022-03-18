@@ -29,19 +29,19 @@ Tout d'abord, changeons schéma de données par un exemple plus complexe.
 
 ```typescript
 interface Project {
-  title: string;
-  order: number;
-  active: boolean;
-  createdAt: Date;
-  labels: string[];
-  assigned: {
-    firstName: string;
-    lastName: string;
-  };
+	title: string;
+	order: number;
+	active: boolean;
+	createdAt: Date;
+	labels: string[];
+	assigned: {
+		firstName: string;
+		lastName: string;
+	};
 }
 ```
 
-On va donc gérer des "projets", c'est très conceptuel mais au moins on va pouvoir jouer avec différentes complexitées.  
+On va donc gérer des "projets", c'est très conceptuel mais au moins on va pouvoir jouer avec différentes complexités.  
 Un projet a donc un titre, un ordre (d'affichage dans une liste pourquoi pas), une notion de projet actif ou non, une date de création, une liste de libellés et une personne liée.
 
 Ce schéma va nous permettre de voir plusieurs type de données :
@@ -61,10 +61,10 @@ Essayons maintenant une approche naïve de notre formulaire :
 
 ```tsx
 <Form method="post">
-  <label htmlFor="title">Project title</label>
-  <input type="text" name="title" required />
+	<label htmlFor="title">Project title</label>
+	<input type="text" name="title" required />
 
-  <button type="submit">Create this project</button>
+	<button type="submit">Create this project</button>
 </Form>
 ```
 
@@ -72,17 +72,17 @@ Pour le premiers champ, ça va, c'est relativement sensé. Qu'est-ce qu'on reço
 
 ```typescript
 export let action: ActionFunction = async ({ request }) => {
-  let formData = await request.formData();
-  let formDataObj = Object.fromEntries(formData.entries());
+	let formData = await request.formData();
+	let formDataObj = Object.fromEntries(formData.entries());
 
-  console.debug(formDataObj);
-  /*
-   * {
-   *  title: 'Projet un',
-   * }
-   */
+	console.debug(formDataObj);
+	/*
+	 * {
+	 *  title: 'Projet un',
+	 * }
+	 */
 
-  return null;
+	return null;
 };
 ```
 
@@ -94,13 +94,13 @@ Ajoutons maintenant notre champs `order` qui est un nombre :
 
 ```tsx {5-6}
 <Form method="post">
-  <label htmlFor="title">Project title</label>
-  <input type="text" name="title" required />
+	<label htmlFor="title">Project title</label>
+	<input type="text" name="title" required />
 
-  <label htmlFor="order">Order in list</label>
-  <input type="number" name="order" defaultValue={1} />
+	<label htmlFor="order">Order in list</label>
+	<input type="number" name="order" defaultValue={1} />
 
-  <button type="submit">Create this project</button>
+	<button type="submit">Create this project</button>
 </Form>
 ```
 
@@ -121,12 +121,12 @@ Ajoutons une fonction qui va nous permettre de transformer nos valeurs une à un
 ```typescript
 // On imagine cette méthode appellée pour chaque clé de notre formDataObj
 function parseFormDataValue<ExpectedType>(value: string): ExpectedType {
-  // Une regex qui détecte les nombres positifs et négatifs à virgules ou non
-  if (/^[+-]?\d+(\.\d+)?$/.test(str)) {
-    return parseFloat(str);
-  }
+	// Une regex qui détecte les nombres positifs et négatifs à virgules ou non
+	if (/^[+-]?\d+(\.\d+)?$/.test(str)) {
+		return parseFloat(str);
+	}
 
-  return value;
+	return value;
 }
 ```
 
@@ -138,16 +138,16 @@ Ajoutons notre booléen.
 
 ```tsx {8-9}
 <Form method="post">
-  <label htmlFor="title">Project title</label>
-  <input type="text" name="title" required />
+	<label htmlFor="title">Project title</label>
+	<input type="text" name="title" required />
 
-  <label htmlFor="order">Order in list</label>
-  <input type="number" name="order" defaultValue={1} />
+	<label htmlFor="order">Order in list</label>
+	<input type="number" name="order" defaultValue={1} />
 
-  <label htmlFor="active">Is the project active ?</label>
-  <input type="checkbox" name="active" />
+	<label htmlFor="active">Is the project active ?</label>
+	<input type="checkbox" name="active" />
 
-  <button type="submit">Create this project</button>
+	<button type="submit">Create this project</button>
 </Form>
 ```
 
@@ -214,22 +214,22 @@ Un truc dans ces eaux là :
 // On indique quand même comment gérer les false
 // au cas où on les passe manuellement
 const boolKeywords = {
-  true: true,
-  on: true,
-  false: false,
-  off: false,
+	true: true,
+	on: true,
+	false: false,
+	off: false,
 };
 
 function parseFormDataValue<ExpectedType>(value: string): ExpectedType {
-  if (/^[+-]?\d+(\.\d+)?$/.test(str)) {
-    return parseFloat(str);
-  }
+	if (/^[+-]?\d+(\.\d+)?$/.test(str)) {
+		return parseFloat(str);
+	}
 
-  if (value in boolKeywords) {
-    return boolKeywords[value];
-  }
+	if (value in boolKeywords) {
+		return boolKeywords[value];
+	}
 
-  return value;
+	return value;
 }
 ```
 
@@ -239,19 +239,19 @@ Ajoutons notre date.
 
 ```tsx {11-12}
 <Form method="post">
-  <label htmlFor="title">Project title</label>
-  <input type="text" name="title" required />
+	<label htmlFor="title">Project title</label>
+	<input type="text" name="title" required />
 
-  <label htmlFor="order">Order in list</label>
-  <input type="number" name="order" defaultValue={1} />
+	<label htmlFor="order">Order in list</label>
+	<input type="number" name="order" defaultValue={1} />
 
-  <label htmlFor="active">Is the project active ?</label>
-  <input type="checkbox" name="active" />
+	<label htmlFor="active">Is the project active ?</label>
+	<input type="checkbox" name="active" />
 
-  <label htmlFor="createdAt">Creation date</label>
-  <input type="date" name="createdAt" />
+	<label htmlFor="createdAt">Creation date</label>
+	<input type="date" name="createdAt" />
 
-  <button type="submit">Create this project</button>
+	<button type="submit">Create this project</button>
 </Form>
 ```
 
@@ -272,23 +272,23 @@ Cette chaîne, on va devoir la transformer en `Date` pour pouvoir la manipuler.
 
 ```typescript {10-13}
 function parseFormDataValue<ExpectedType>(value: string): ExpectedType {
-  if (/^[+-]?\d+(\.\d+)?$/.test(str)) {
-    return parseFloat(str);
-  }
+	if (/^[+-]?\d+(\.\d+)?$/.test(str)) {
+		return parseFloat(str);
+	}
 
-  if (value in boolKeywords) {
-    return boolKeywords[value];
-  }
+	if (value in boolKeywords) {
+		return boolKeywords[value];
+	}
 
-  // Grosse regex pour gérer le même format de date que celui du HTML
-  // à savoir YYYY-MM-DD et YYYY/MM/DD
-  if (
-    /^\d{4}[\/\-](0?[1-9]|1[012])[\/\-](0?[1-9]|[12][0-9]|3[01])$/.test(str)
-  ) {
-    return new Date(str);
-  }
+	// Grosse regex pour gérer le même format de date que celui du HTML
+	// à savoir YYYY-MM-DD et YYYY/MM/DD
+	if (
+		/^\d{4}[\/\-](0?[1-9]|1[012])[\/\-](0?[1-9]|[12][0-9]|3[01])$/.test(str)
+	) {
+		return new Date(str);
+	}
 
-  return value;
+	return value;
 }
 ```
 
@@ -296,32 +296,32 @@ function parseFormDataValue<ExpectedType>(value: string): ExpectedType {
 
 Maintenant, comment ajouter une liste de chaînes ? Ou une liste tout court d'ailleurs ?
 
-Il n'existe rien en HTML qui permette ça nativement et aucune convention globale, c'est donc à nous de definir un moyen d'interpréter des listes avec les moyens à notre disposition.
+Il n'existe rien en HTML qui permette ça nativement et aucune convention globale, c'est donc à nous de définir un moyen d'interpréter des listes avec les moyens à notre disposition.
 
 Un moyen que j'ai vu plusieurs fois et qui est à la fois simple à mettre en place et très clair est de supposer un index à notre champ comme ceci :
 
 ```tsx {14-19}
 <Form method="post">
-  <label htmlFor="title">Project title</label>
-  <input type="text" name="title" required />
+	<label htmlFor="title">Project title</label>
+	<input type="text" name="title" required />
 
-  <label htmlFor="order">Order in list</label>
-  <input type="number" name="order" defaultValue={1} />
+	<label htmlFor="order">Order in list</label>
+	<input type="number" name="order" defaultValue={1} />
 
-  <label htmlFor="active">Is the project active ?</label>
-  <input type="checkbox" name="active" />
+	<label htmlFor="active">Is the project active ?</label>
+	<input type="checkbox" name="active" />
 
-  <label htmlFor="createdAt">Creation date</label>
-  <input type="date" name="createdAt" />
+	<label htmlFor="createdAt">Creation date</label>
+	<input type="date" name="createdAt" />
 
-  <fieldset>
-    <legend>Labels</legend>
-    <input type="text" name="labels[0]" />
-    <input type="text" name="labels[1]" />
-    <input type="text" name="labels[2]" />
-  </fieldset>
+	<fieldset>
+		<legend>Labels</legend>
+		<input type="text" name="labels[0]" />
+		<input type="text" name="labels[1]" />
+		<input type="text" name="labels[2]" />
+	</fieldset>
 
-  <button type="submit">Create this project</button>
+	<button type="submit">Create this project</button>
 </Form>
 ```
 
@@ -332,49 +332,49 @@ On peut imaginer un bouton d'ajout de champs avec React par exemple
 
 ```tsx {2,21-35}
 export default function createProjectRoute() {
-  let [labelsNumber, setLabelsNumber] = useState(0);
+	let [labelsNumber, setLabelsNumber] = useState(0);
 
-  return (
-    <Form method="post">
-      <label htmlFor="title">Project title</label>
-      <input type="text" name="title" required />
+	return (
+		<Form method="post">
+			<label htmlFor="title">Project title</label>
+			<input type="text" name="title" required />
 
-      <label htmlFor="order">Order in list</label>
-      <input type="number" name="order" defaultValue={1} />
+			<label htmlFor="order">Order in list</label>
+			<input type="number" name="order" defaultValue={1} />
 
-      <label htmlFor="active">Is the project active ?</label>
-      <input type="checkbox" name="active" />
+			<label htmlFor="active">Is the project active ?</label>
+			<input type="checkbox" name="active" />
 
-      <label htmlFor="createdAt">Creation date</label>
-      <input type="date" name="createdAt" />
+			<label htmlFor="createdAt">Creation date</label>
+			<input type="date" name="createdAt" />
 
-      <fieldset>
-        <legend>Labels</legend>
+			<fieldset>
+				<legend>Labels</legend>
 
-        {Array(labelsNumber)
-          .fill(0)
-          .map((_, i) => (
-            <input type="text" name={`labels[${i}]`} />
-          ))}
+				{Array(labelsNumber)
+					.fill(0)
+					.map((_, i) => (
+						<input type="text" name={`labels[${i}]`} />
+					))}
 
-        <button type="button" onClick={() => setLabelsNumber((x) => x + 1)}>
-          Add label
-        </button>
+				<button type="button" onClick={() => setLabelsNumber((x) => x + 1)}>
+					Add label
+				</button>
 
-        {labelsNumber > 0 ? (
-          <button type="button" onClick={() => setLabelsNumber((x) => x - 1)}>
-            Remove last label
-          </button>
-        ) : null}
-      </fieldset>
+				{labelsNumber > 0 ? (
+					<button type="button" onClick={() => setLabelsNumber((x) => x - 1)}>
+						Remove last label
+					</button>
+				) : null}
+			</fieldset>
 
-      <button type="submit">Create this project</button>
-    </Form>
-  );
+			<button type="submit">Create this project</button>
+		</Form>
+	);
 }
 ```
 
-Ici on garde dans un état le nombre de champs, on boucle sur une liste vide juste pour créer le bon nombre de champs et on donne la possibilité d'incrémenter et de décrementer le nombre de champs.
+Ici on garde dans un état le nombre de champs, on boucle sur une liste vide juste pour créer le bon nombre de champs et on donne la possibilité d'incrémenter et de décrémenter le nombre de champs.
 
 </details>
 
@@ -408,43 +408,43 @@ On peut appliquer la même solution cependant en utilisant le même système de 
 
 ```tsx {21-29}
 <Form method="post">
-  <label htmlFor="title">Project title</label>
-  <input type="text" name="title" required />
+	<label htmlFor="title">Project title</label>
+	<input type="text" name="title" required />
 
-  <label htmlFor="order">Order in list</label>
-  <input type="number" name="order" defaultValue={1} />
+	<label htmlFor="order">Order in list</label>
+	<input type="number" name="order" defaultValue={1} />
 
-  <label htmlFor="active">Is the project active ?</label>
-  <input type="checkbox" name="active" />
+	<label htmlFor="active">Is the project active ?</label>
+	<input type="checkbox" name="active" />
 
-  <label htmlFor="createdAt">Creation date</label>
-  <input type="date" name="createdAt" />
+	<label htmlFor="createdAt">Creation date</label>
+	<input type="date" name="createdAt" />
 
-  <fieldset>
-    <legend>Labels</legend>
-    <input type="text" name="labels[0]" />
-    <input type="text" name="labels[1]" />
-    <input type="text" name="labels[2]" />
-  </fieldset>
+	<fieldset>
+		<legend>Labels</legend>
+		<input type="text" name="labels[0]" />
+		<input type="text" name="labels[1]" />
+		<input type="text" name="labels[2]" />
+	</fieldset>
 
-  <fieldset>
-    <legend>Assigned person</legend>
+	<fieldset>
+		<legend>Assigned person</legend>
 
-    <label htmlFor="assigned.firstName">First name</label>
-    <input type="text" name="assigned.firstName" />
+		<label htmlFor="assigned.firstName">First name</label>
+		<input type="text" name="assigned.firstName" />
 
-    <label htmlFor="assigned.lastName">Last name</label>
-    <input type="text" name="assigned.lastName" />
-  </fieldset>
+		<label htmlFor="assigned.lastName">Last name</label>
+		<input type="text" name="assigned.lastName" />
+	</fieldset>
 
-  <button type="submit">Create this project</button>
+	<button type="submit">Create this project</button>
 </Form>
 ```
 
 Comme vous pouvez le constater, on ajoute chaque champ à la suite mais en indiquant la position dans l'objet final avec `assigned.firstName`.  
 On peut imaginer des objets plus imbriqué comme `assigned.knowledge.remix.score` voire même carrément mélanger des objets imbriqué et des listes avec `assigned.favoriteFrameworks[0].name` !
 
-Mais je m'emporte, passons à l'implémentation de ces champs infiniments imbriqués :
+Mais je m'emporte, passons à l'implémentation de ces champs infiniment imbriqués :
 
 ...
 
@@ -452,9 +452,9 @@ Mais je m'emporte, passons à l'implémentation de ces champs infiniments imbriq
 
 Là je jette l'éponge, on ne va pas passer une semaine à améliorer notre gestion des formulaires pour gagner 2h au total. À moins que...
 
-## `qs` le parser de querystring
+## `qs` le parser de query string
 
-Bien entendu, à chaque fois qu'il faudrait créer un sous-projet pour répondre à un besoin, on peut être sûr que des gens l'ont déjà probablement fait et c'est le cas avec [`qs`](https://github.com/ljharb/qs) qui a pour but de transformer une querystring :
+Bien entendu, à chaque fois qu'il faudrait créer un sous-projet pour répondre à un besoin, on peut être sûr que des gens l'ont déjà probablement fait et c'est le cas avec [`qs`](https://github.com/ljharb/qs) qui a pour but de transformer une query string :
 
 ```
 ?key=value&arr[0]=a&arr[1]=b&obj.key=objvalue
@@ -493,7 +493,7 @@ en
 }
 ```
 
-Super ! Mais ça ne gère pas les valeurs numériques, booléenes et de date ça.  
+Super ! Mais ça ne gère pas les valeurs numériques, booléennes et de date ça.  
 (Au moins le code d'avant n'est pas à jeter !)
 
 > [Si vous voulez comprendre pourquoi `qs` ne gère pas ça](https://github.com/ljharb/qs#parsing-primitivescalar-values-numbers-booleans-null-etc)
@@ -515,27 +515,27 @@ Pour commencer on va avoir besoin d'ajouter `qs` à notre projet
 
 </Tabs>
 
-Ensuite, pour fournir une querystring à `qs`, il va nous falloir transformer notre formData. Heureusement, il existe des méthode natives
+Ensuite, pour fournir une query string à `qs`, il va nous falloir transformer notre formData. Heureusement, il existe des méthode natives
 
 ```typescript
 export let action: ActionFunction = async ({ request }) => {
-  // On récupère notre formData
-  let formData = await request.formData();
+	// On récupère notre formData
+	let formData = await request.formData();
 
-  // On transforme ses entrées en une liste à deux dimensions
-  let formDataEntries = [...formData.entries()] as string[][];
+	// On transforme ses entrées en une liste à deux dimensions
+	let formDataEntries = [...formData.entries()] as string[][];
 
-  // Et cette liste peut être transformé avec la classe URLSearchParams
-  let queryParams = new URLSearchParams(formDataEntries).toString();
+	// Et cette liste peut être transformé avec la classe URLSearchParams
+	let queryParams = new URLSearchParams(formDataEntries).toString();
 
-  console.debug(queryParams);
-  // title=Projet+1&order=1&active=on&createdAt=2022-02-23&labels%5B0%5D=a& ...
+	console.debug(queryParams);
+	// title=Projet+1&order=1&active=on&createdAt=2022-02-23&labels%5B0%5D=a& ...
 
-  return null;
+	return null;
 };
 ```
 
-Maintenant qu'on a cette querystring, on va pouvoir la parse à l'aide de `qs`
+Maintenant qu'on a cette query string, on va pouvoir la parse à l'aide de `qs`
 
 ```typescript {1,10}
 import qs from "qs"
@@ -575,82 +575,82 @@ Soit on profite de `qs` et de son option `decoder` qui permet... de faire exacte
 import qs, { IParseOptions } from "qs";
 
 let customDecoder: IParseOptions["decoder"] = (str, decoder, charset) => {
-  // On va avoir besoin de gérer un peu plus précisement nos valeurs
-  // donc un peu plus de cambouis sur les mains
+	// On va avoir besoin de gérer un peu plus précisement nos valeurs
+	// donc un peu plus de cambouis sur les mains
 
-  // On skip nos chaines vides
-  if (str.length === 0) {
-    return;
-  }
+	// On skip nos chaines vides
+	if (str.length === 0) {
+		return;
+	}
 
-  // On parse nos nombres
-  if (/^(\d+|\d*\.\d+)$/.test(str)) {
-    return parseFloat(str);
-  }
+	// On parse nos nombres
+	if (/^(\d+|\d*\.\d+)$/.test(str)) {
+		return parseFloat(str);
+	}
 
-  // On remplace les chaînes avec des mot-clés par leurs valeur
-  // (uniquement si on souhaite pouvoir passer des null et des undefined)
-  const keywords = {
-    null: null,
-    undefined,
-  };
-  if (str in keywords) {
-    // Typescript crie parce qu'il a peur d'accéder à keywords[str]
-    // malgrès notre vérification
+	// On remplace les chaînes avec des mot-clés par leurs valeur
+	// (uniquement si on souhaite pouvoir passer des null et des undefined)
+	const keywords = {
+		null: null,
+		undefined,
+	};
+	if (str in keywords) {
+		// Typescript crie parce qu'il a peur d'accéder à keywords[str]
+		// malgrès notre vérification
 
-    // @ts-expect-error si on peut
-    return keywords[str];
-  }
+		// @ts-expect-error si on peut
+		return keywords[str];
+	}
 
-  // On parse nos booléens
-  const boolKeywords = {
-    true: true,
-    on: true,
-    false: false,
-    off: false,
-  };
-  if (str in boolKeywords) {
-    // Typescript crie parce qu'il a peur d'accéder à boolKeywords[str]
-    // malgrès notre vérification
+	// On parse nos booléens
+	const boolKeywords = {
+		true: true,
+		on: true,
+		false: false,
+		off: false,
+	};
+	if (str in boolKeywords) {
+		// Typescript crie parce qu'il a peur d'accéder à boolKeywords[str]
+		// malgrès notre vérification
 
-    // @ts-expect-error si on peut
-    return boolKeywords[str];
-  }
+		// @ts-expect-error si on peut
+		return boolKeywords[str];
+	}
 
-  // On parse nos dates
-  if (
-    /^\d{4}[\/\-](0?[1-9]|1[012])[\/\-](0?[1-9]|[12][0-9]|3[01])$/.test(str)
-  ) {
-    return new Date(str);
-  }
+	// On parse nos dates
+	if (
+		/^\d{4}[\/\-](0?[1-9]|1[012])[\/\-](0?[1-9]|[12][0-9]|3[01])$/.test(str)
+	) {
+		return new Date(str);
+	}
 
-  // Si on est arrivé là, c'est qu'on a une chaîne.
+	// Si on est arrivé là, c'est qu'on a une chaîne.
 
-  // On retire les + et les %20 à la place des espaces
-  const strWithoutPlus = str.replace(/\+/g, " ");
-  if (charset === "iso-8859-1") {
-    return strWithoutPlus.replace(/%[0-9a-f]{2}/gi, unescape);
-  }
+	// On retire les + et les %20 à la place des espaces
+	const strWithoutPlus = str.replace(/\+/g, " ");
+	if (charset === "iso-8859-1") {
+		return strWithoutPlus.replace(/%[0-9a-f]{2}/gi, unescape);
+	}
 
-  // Et on essaye aussi de décoder le caractères du genre ? = & /
-  try {
-    return decodeURIComponent(strWithoutPlus);
-  } catch (e) {
-    return strWithoutPlus;
-  }
+	// Et on essaye aussi de décoder le caractères du genre ? = & /
+	try {
+		return decodeURIComponent(strWithoutPlus);
+	} catch (e) {
+		return strWithoutPlus;
+	}
 };
 
 export let action: ActionFunction = async ({ request }) => {
-  let formData = await request.formData();
-  let formDataEntries = [...formData.entries()] as string[][];
-  let queryParams = new URLSearchParams(formDataEntries).toString();
+	let formData = await request.formData();
+	let formDataEntries = [...formData.entries()] as string[][];
+	let queryParams = new URLSearchParams(formDataEntries).toString();
 
-  let parsed = qs.parse(queryParams, {
-    allowDots: true,
-    decoder: customDecoder,
-  });
+	let parsed = qs.parse(queryParams, {
+		allowDots: true,
+		decoder: customDecoder,
+	});
 
-  return null;
+	return null;
 };
 ```
 
@@ -680,7 +680,7 @@ Mais non bien sûr, si vous voulez profitez de toute la puissance de `zod` et de
 
 Vous y trouverez un moyen de lancer un projet Remix avec tout ce qui faut pour gérer une base de données, des formulaires complexes, la synchronisation des types entre le serveur et le client etc.
 
-Tailwind y est déjà intégré ainsi que Prisma et SuperJSON, si vous avez des idées, n'hesitez pas à m'en parler sur la page github 😉
+Tailwind y est déjà intégré ainsi que Prisma et SuperJSON, si vous avez des idées, n'hésitez pas à m'en parler sur la page Github 😉
 
 À bientôt j'espère !
 

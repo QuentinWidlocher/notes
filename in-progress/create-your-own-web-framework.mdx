@@ -3,6 +3,9 @@ title: Create your own web framework - Part 1
 subtitle: Why would you do that ?
 createdAt: "2022-03-15T00:00:00"
 series: Create your own web framework
+cover:
+  src: https://images.pexels.com/photos/10179165/pexels-photo-10179165.jpeg
+  alt: Unrelated picture of a boat on a lake, by Kelly Lacy
 lang: en
 ---
 
@@ -17,19 +20,19 @@ similar its principles are with Remix. (or the other way around of course).
 The only thing that makes it hard for me to enjoy is the lack of a proper templating system. String concatenation of html tags feels so clunky to me, and I'm not used to the PHP syntax at all.
 
 That's when I thought, "wouldn't it be cool to use this old school approach with more modern tool".  
-By "with more modern tool", undertand "with Javascript" of course. 😁
+By "with more modern tool", understand "with Javascript" of course. 😁
 
 ## What I want to do
 
-I want to create a tool that's easy to learn and use, and makes a big use of the fundementals of Javascript and the web.
-I won't create a web server so I'll use Express, but I'll try to leverage Express capatibilities the best I can, same goes for the templating system, I don't want to integrate JSX as I feel the \``template string ${interpolation}`\` is powerful enough.
+I want to create a tool that's easy to learn and use, and makes a big use of the fundamentals of Javascript and the web.
+I won't create a web server so I'll use Express, but I'll try to leverage Express capabilities the best I can, same goes for the templating system, I don't want to integrate JSX as I feel the \``template string ${interpolation}`\` is powerful enough.
 
 This tool should allow beginners to build website easily, while having a good understanding of what's going on behind the scenes so I want to keep my source code as clear as possible.  
 I know a lot of tools out there feels too magical for me and I really want to make the users feel like nothing can go wrong because they know all the tricks.
 
 ## What I don't want to do
 
-I don't care if this tool will lack functionnality, or if it's too slow or whatever, I don't want to compete with Remix _at all_ (it's not like I could anyway 😂)
+I don't care if this tool will lack functionality, or if it's too slow or whatever, I don't want to compete with Remix _at all_ (it's not like I could anyway 😂)
 
 Also, it's not a big deal if the final user experience is not top-notch. If the page blinks for half a second when you click a button, so be it, that's what's happening with old vanilla PHP in any case.
 
@@ -49,7 +52,7 @@ First, I made a list of all the functionality I think were needed in a web frame
 
 That would be enough to create a nice dynamic website. You could compute some data, and display it logically in your file.
 
-It's kind of barebone but it's a great basis for the most advanced features coming next.
+It's kind of bare-bone but it's a great basis for the most advanced features coming next.
 
 ### The bonus
 
@@ -57,7 +60,7 @@ It's kind of barebone but it's a great basis for the most advanced features comi
 - Allowing nested routes and route parameters (like `/users/QuentinWidlocher/edit`)
 - Add local and global state to the application (local as in per-page states)
 - Add some configuration to the server (hosting dir, change the port, the default error page etc.)
-- Refining the developper experience (errors display, watch mode etc.)
+- Refining the developer experience (errors display, watch mode etc.)
 
 This would bring the framework to a higher standard, while keeping it quite simple I hope.  
 This version would be one I'd actually use and not just something only for learning.
@@ -76,16 +79,16 @@ Express gives us :
 Javascript (and node) gives us :
 
 - "Arbitrary" code execution (so we can execute code from a string)
-- Powerful and nested string interpolation with template litterals
+- Powerful and nested string interpolation with template literals
 - Asynchronous code easily with `async`/`await`
 - An easy way to pass props around by `...spread`ing them to function arguments
-- Librairies to fetch data and interract with files in the file system
+- Libraries to fetch data and interact with files in the file system
 
 Whew, that's a lot of things we _won't_ have to do right ? What's left then ?
 
-- Serving html and assets based on their route
-- Parsing the server code and getting back values to...
-- ...pass those values to the template
+- Serving html files and assets based on their route
+- Parsing the server code and getting back values
+- Pass those values to the template
 - Interpreting the template to produce a string result
 - Find a way to store states in each routes.
 
@@ -99,3 +102,4 @@ In the next part, we'll start by a quick overview of our two main parts, Express
 > Spoiler alert : I've already built this tool 😅
 > You can find the [repository on github](https://github.com/QuentinWidlocher/web-framework)
 > It's not 100% done for now, but the main features are here
+> Check it out and don't hesitate to create an issue or a PR
