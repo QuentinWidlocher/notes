@@ -4,7 +4,7 @@ subtitle: Valider un formulaire et gérer les erreurs
 createdAt: 2022-02-21T00:00:00
 cover:
   src: https://images.pexels.com/photos/10893777/pexels-photo-10893777.jpeg
-  alt: Unrelated picture of a waterfall in the mountains
+  alt: Unrelated picture of a waterfall in the mountains, by Kelly Lacy
 series: Les formulaires avec Remix
 lang: fr
 ---
@@ -17,22 +17,22 @@ Reprenons notre exemple précédent et ajoutons quelques champs afin de rentre l
 
 ```html
 <form method="post">
-  <label htmlFor="name">Full Name</label>
-  <input type="text" name="name" required />
+	<label htmlFor="name">Full Name</label>
+	<input type="text" name="name" required />
 
-  <label htmlFor="email">Email</label>
-  <input type="email" name="email" />
+	<label htmlFor="email">Email</label>
+	<input type="email" name="email" />
 
-  <label htmlFor="phone">Phone number</label>
-  <input type="number" name="phone" />
+	<label htmlFor="phone">Phone number</label>
+	<input type="number" name="phone" />
 
-  <label htmlFor="password">Password</label>
-  <input type="password" name="password" />
+	<label htmlFor="password">Password</label>
+	<input type="password" name="password" />
 
-  <label htmlFor="passwordConfirm">Password confirmation</label>
-  <input type="password" name="passwordConfirm" />
+	<label htmlFor="passwordConfirm">Password confirmation</label>
+	<input type="password" name="passwordConfirm" />
 
-  <button type="submit">Submit</button>
+	<button type="submit">Submit</button>
 </form>
 ```
 
@@ -135,38 +135,38 @@ Dans notre fonction `validateForm()`, plus question de retourner un simple bool�
 ```ts
 // Ici, FormObject est un type qui ressemble à nos champs
 function validateForm(formObj: FormObject) {
-  let errors: string[] = [];
+	let errors: string[] = [];
 
-  // S'assure qu'un nom a été donnée
-  if (!formObj.name) {
-    errors.push("Un nom est requis");
-  }
+	// S'assure qu'un nom a été donnée
+	if (!formObj.name) {
+		errors.push("Un nom est requis");
+	}
 
-  // Valide l'email avec une regex un peu énervée, sortie de mon chapeau (ou pas)
-  if (
-    !/^(([^<>()[\]\.,;:\s@\"]+(\.[^<>()[\]\.,;:\s@\"]+)*)|(\".+\"))@(([^<>()[\]\.,;:\s@\"]+\.)+[^<>()[\]\.,;:\s@\"]{2,})$/i.test(
-      formObj.email
-    )
-  ) {
-    errors.push("L'email est invalide");
-  }
+	// Valide l'email avec une regex un peu énervée, sortie de mon chapeau (ou pas)
+	if (
+		!/^(([^<>()[\]\.,;:\s@\"]+(\.[^<>()[\]\.,;:\s@\"]+)*)|(\".+\"))@(([^<>()[\]\.,;:\s@\"]+\.)+[^<>()[\]\.,;:\s@\"]{2,})$/i.test(
+			formObj.email
+		)
+	) {
+		errors.push("L'email est invalide");
+	}
 
-  // S'assure que le numéro de téléphone fait 10 chiffre (simpliste)
-  if (String(formObj.phone).length != 10) {
-    errors.push("Le numéro de téléphone doit faire 10 chiffres");
-  }
+	// S'assure que le numéro de téléphone fait 10 chiffre (simpliste)
+	if (String(formObj.phone).length != 10) {
+		errors.push("Le numéro de téléphone doit faire 10 chiffres");
+	}
 
-  // S'assure que le mot de passe fait un minumum de lettres
-  if (formObj.password?.length < 6) {
-    errors.push("Le mot de passe doit faire au minimum 6 caractères");
-  }
+	// S'assure que le mot de passe fait un minumum de lettres
+	if (formObj.password?.length < 6) {
+		errors.push("Le mot de passe doit faire au minimum 6 caractères");
+	}
 
-  // S'assure que les mots de passe sont identiques
-  if (formObj.password != formObj.passwordConfirm) {
-    errors.push("Les mots de passes ne correspondent pas");
-  }
+	// S'assure que les mots de passe sont identiques
+	if (formObj.password != formObj.passwordConfirm) {
+		errors.push("Les mots de passes ne correspondent pas");
+	}
 
-  return errors;
+	return errors;
 }
 ```
 
@@ -203,35 +203,35 @@ Maintenant, avec un peu de _magie Typescript_ (aussi appelé [Discriminated Unio
 // Comme ça quand on regarde juste `obj.success`, Typescript sait s'il
 // doit chercher une propriété `data` ou `errors`
 type ActionPayload =
-  | {
-      success: true;
-      data: User; // on imagine un type lié à celui retourné par la bdd
-    }
-  | {
-      success: false;
-      errors: string[];
-    };
+	| {
+			success: true;
+			data: User; // on imagine un type lié à celui retourné par la bdd
+	  }
+	| {
+			success: false;
+			errors: string[];
+	  };
 
 export default function SimpleFormPage() {
-  // On récupère ce que l'action nous renvoi
-  let actionData = useActionData<ActionPayload>();
+	// On récupère ce que l'action nous renvoi
+	let actionData = useActionData<ActionPayload>();
 
-  // On se sert du type pour extraire une liste d'erreur
-  let errors = actionData.success ? [] : actionData.errors;
+	// On se sert du type pour extraire une liste d'erreur
+	let errors = actionData.success ? [] : actionData.errors;
 
-  // On affiche la liste des erreurs au dessus de notre formulaire
-  return (
-    <section>
-      {errors.length > 0 ? (
-        <ul>
-          {errors.map((error) => (
-            <li>{error}</li>
-          ))}
-        </ul>
-      ) : null}
-      <form method="post">{/* [...] */}</form>
-    </section>
-  );
+	// On affiche la liste des erreurs au dessus de notre formulaire
+	return (
+		<section>
+			{errors.length > 0 ? (
+				<ul>
+					{errors.map((error) => (
+						<li>{error}</li>
+					))}
+				</ul>
+			) : null}
+			<form method="post">{/* [...] */}</form>
+		</section>
+	);
 }
 ```
 
@@ -256,15 +256,15 @@ Le fonctionnement est très simple, on construit un validateur avec les fonction
 
 ```ts
 let validator = z.object({
-  name: z.string().required("Un nom est requis"),
-  email: z.string().email("L'email est invalide"),
-  phone: z
-    .string()
-    .length(10, { message: "Le numéro de téléphone doit faire 10 chiffres" }),
-  password: z
-    .string()
-    .min(6, { message: "Le mot de passe doit faire au minimum 6 caractères" }),
-  passwordConfirm: z.string(),
+	name: z.string().required("Un nom est requis"),
+	email: z.string().email("L'email est invalide"),
+	phone: z
+		.string()
+		.length(10, { message: "Le numéro de téléphone doit faire 10 chiffres" }),
+	password: z
+		.string()
+		.min(6, { message: "Le mot de passe doit faire au minimum 6 caractères" }),
+	passwordConfirm: z.string(),
 });
 ```
 
@@ -274,21 +274,21 @@ Pour affiner notre validateur, zod nous propose de chaîner une fonction `refine
 
 ```ts
 let validator = z
-  .object({
-    name: z.string().required("Un nom est requis"),
-    email: z.string().email("L'email est invalide"),
-    phone: z
-      .string()
-      .length(10, { message: "Le numéro de téléphone doit faire 10 chiffres" }),
-    password: z.string().min(6, {
-      message: "Le mot de passe doit faire au minimum 6 caractères",
-    }),
-    passwordConfirm: z.string(),
-  })
-  .refine((obj) => obj.password === obj.passwordConfirm, {
-    message: "Les mots de passes ne correspondent pas",
-    path: ["passwordConfirm"],
-  });
+	.object({
+		name: z.string().required("Un nom est requis"),
+		email: z.string().email("L'email est invalide"),
+		phone: z
+			.string()
+			.length(10, { message: "Le numéro de téléphone doit faire 10 chiffres" }),
+		password: z.string().min(6, {
+			message: "Le mot de passe doit faire au minimum 6 caractères",
+		}),
+		passwordConfirm: z.string(),
+	})
+	.refine((obj) => obj.password === obj.passwordConfirm, {
+		message: "Les mots de passes ne correspondent pas",
+		path: ["passwordConfirm"],
+	});
 ```
 
 Le premier paramètre de `refine()` est une fonction qui valide quelque chose à la manière d'un `assert` et le second est un objet qui nous permet de spécifier un message d'erreur, mais aussi où le mettre (on va voir ça juste après)
@@ -351,11 +351,11 @@ De plus, puisque zod a été créé avec Typescript en tête, il est possible d'
 
   // Juste pour l'explication
   type FormDataEquivalent = {
-    name: string;
-    email: string;
-    phone: string;
-    password: string;
-    passwordConfirm: string;
+  	name: string;
+  	email: string;
+  	phone: string;
+  	password: string;
+  	passwordConfirm: string;
   };
   ```
 
@@ -366,12 +366,12 @@ De plus, puisque zod a été créé avec Typescript en tête, il est possible d'
 
   // Juste pour l'explication
   type FormDataErrorsEquivalent = {
-    _errors: string[];
-    name: { _errors: string[] };
-    email: { _errors: string[] };
-    phone: { _errors: string[] };
-    password: { _errors: string[] };
-    passwordConfirm: { _errors: string[] };
+  	_errors: string[];
+  	name: { _errors: string[] };
+  	email: { _errors: string[] };
+  	phone: { _errors: string[] };
+  	password: { _errors: string[] };
+  	passwordConfirm: { _errors: string[] };
   };
   ```
 
@@ -385,57 +385,57 @@ Maintenant qu'on a notre validation automatique, lié à notre formulaire, et qu
 
 ```tsx
 export default function SimpleFormPage() {
-  // On récupère ce que l'action nous renvoi
-  let actionData = useActionData<ActionPayload>();
+	// On récupère ce que l'action nous renvoi
+	let actionData = useActionData<ActionPayload>();
 
-  // On se sert du type pour extraire nos erreurs
-  let errors = actionData.success ? [] : actionData.errors;
+	// On se sert du type pour extraire nos erreurs
+	let errors = actionData.success ? [] : actionData.errors;
 
-  // On affiche les erreurs sous nos champs directement
-  return (
-    <section>
-      <form method="post">
-        <label htmlFor="name">Full Name</label>
-        <input type="text" name="name" required />
-        {errors?.name?._errors?.length > 0 ? (
-          <small>{errors?.name?._errors[0]}</small>
-        ) : null}
+	// On affiche les erreurs sous nos champs directement
+	return (
+		<section>
+			<form method="post">
+				<label htmlFor="name">Full Name</label>
+				<input type="text" name="name" required />
+				{errors?.name?._errors?.length > 0 ? (
+					<small>{errors?.name?._errors[0]}</small>
+				) : null}
 
-        <label htmlFor="email">Email</label>
-        <input type="email" name="email" />
-        {errors?.email?._errors?.length > 0 ? (
-          <small>{errors?.email?._errors[0]}</small>
-        ) : null}
+				<label htmlFor="email">Email</label>
+				<input type="email" name="email" />
+				{errors?.email?._errors?.length > 0 ? (
+					<small>{errors?.email?._errors[0]}</small>
+				) : null}
 
-        <label htmlFor="phone">Phone number</label>
-        <input type="number" name="phone" />
-        {errors?.phone?._errors?.length > 0 ? (
-          <small>{errors?.phone?._errors[0]}</small>
-        ) : null}
+				<label htmlFor="phone">Phone number</label>
+				<input type="number" name="phone" />
+				{errors?.phone?._errors?.length > 0 ? (
+					<small>{errors?.phone?._errors[0]}</small>
+				) : null}
 
-        <label htmlFor="password">Password</label>
-        <input type="password" name="password" />
-        {errors?.password?._errors?.length > 0 ? (
-          <small>{errors?.password?._errors[0]}</small>
-        ) : null}
+				<label htmlFor="password">Password</label>
+				<input type="password" name="password" />
+				{errors?.password?._errors?.length > 0 ? (
+					<small>{errors?.password?._errors[0]}</small>
+				) : null}
 
-        <label htmlFor="passwordConfirm">Password confirmation</label>
-        <input type="password" name="passwordConfirm" />
-        {errors?.passwordConfirm?._errors?.length > 0 ? (
-          <small>{errors?.passwordConfirm?._errors[0]}</small>
-        ) : null}
+				<label htmlFor="passwordConfirm">Password confirmation</label>
+				<input type="password" name="passwordConfirm" />
+				{errors?.passwordConfirm?._errors?.length > 0 ? (
+					<small>{errors?.passwordConfirm?._errors[0]}</small>
+				) : null}
 
-        <button type="submit">Submit</button>
-        {
-          // Celui là affiche les erreurs liés à notre z.object()
-          // On ne s'en sert pas dans l'exemple mais sachez le
-          errors?._errors?.length > 0 ? (
-            <small>{errors?._errors[0]}</small>
-          ) : null
-        }
-      </form>
-    </section>
-  );
+				<button type="submit">Submit</button>
+				{
+					// Celui là affiche les erreurs liés à notre z.object()
+					// On ne s'en sert pas dans l'exemple mais sachez le
+					errors?._errors?.length > 0 ? (
+						<small>{errors?._errors[0]}</small>
+					) : null
+				}
+			</form>
+		</section>
+	);
 }
 ```
 
@@ -451,30 +451,30 @@ C'est le moment idéal pour un composant :
 
 ```tsx
 type ErrorMessageProps = {
-  error?: { _errors?: string[] };
-  onlyFirst?: boolean;
-  className?: string;
+	error?: { _errors?: string[] };
+	onlyFirst?: boolean;
+	className?: string;
 };
 
 /**
  * Afffiche une liste d'erreur (ou une seule erreur) depuis un ZodFormattedErrors
  */
 export default function ErrorMessage({
-  error,
-  className = "",
-  onlyFirst = true,
+	error,
+	className = "",
+	onlyFirst = true,
 }: ErrorMessageProps) {
-  return error?._errors?.length ? (
-    <small className={className}>
-      {onlyFirst
-        ? error._errors[0]
-        : error._errors.map((e, i, l) => (
-            <span key={e}>
-              {e} {i <= l.length ? <br /> : null}
-            </span>
-          ))}
-    </small>
-  ) : null;
+	return error?._errors?.length ? (
+		<small className={className}>
+			{onlyFirst
+				? error._errors[0]
+				: error._errors.map((e, i, l) => (
+						<span key={e}>
+							{e} {i <= l.length ? <br /> : null}
+						</span>
+				  ))}
+		</small>
+	) : null;
 }
 ```
 
