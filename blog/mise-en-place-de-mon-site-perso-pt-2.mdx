@@ -41,6 +41,7 @@ app/
 │  ├─ github/
 │  ├─ blog/
 │  ├─ home/
+├─ routes/
 public/
 ```
 
@@ -49,9 +50,9 @@ Ensuite, dans chaque _feature_ (et dans le dossier `app` qui représente un peu 
 - `api` pour les wrappers d'API
 - `components` pour les composants
 - `loaders` pour isoler les loaders et leurs types de retour
-- `pages` pour le composant racine de chaque pages
-  - Les pages prennent uniquement des props et n'utilise pas de hooks du genre `useLoaderData()` car je veux pouvoir les réutiliser dans des contexte différent comme des modales ou autre
-- `styles` pour les rares cas où j'ai besoin de CSS custom (la font monospace dans les articles)
+- `pages` pour le composant racine de chaque page
+  - Les pages prennent uniquement des props et n'utilisent pas de hooks du genre `useLoaderData()` car je veux pouvoir les réutiliser dans des contexte différent comme des modales ou autre
+- `styles` pour les rares cas où j'ai besoin de CSS custom (la font monospace dans les articles par exemple)
 - `types` pour centraliser tous les types d'une feature
 - `utils` pour toutes les petites fonctions utilitaires spécifiques
 
@@ -92,46 +93,44 @@ Avoir un découpage par feature permet aussi de facilement configurer Typescript
 
 ```json {14-21}
 {
-  "include": ["remix.env.d.ts", "**/*.ts", "**/*.tsx"],
-  "compilerOptions": {
-    "lib": ["DOM", "DOM.Iterable", "ES2019"],
-    "isolatedModules": true,
-    "esModuleInterop": true,
-    "jsx": "react-jsx",
-    "moduleResolution": "node",
-    "resolveJsonModule": true,
-    "target": "ES2019",
-    "module": "esnext",
-    "strict": true,
-    "baseUrl": ".",
-    "paths": {
-      "~/*": ["./app/*"],
-      "@components/*": [
-        "./app/components/*",
-        "./app/features/blog/components/*",
-        "./app/features/github/components/*",
-        "./app/features/home/components/*"
-      ],
-      "@blog/*": ["./app/features/blog/*"],
-      "@github/*": ["./app/features/github/*"],
-      "@home/*": ["./app/features/github/*"]
-    },
-
-    // Remix takes care of building everything in `remix build`.
-    "noEmit": true
-  }
+	"include": ["remix.env.d.ts", "**/*.ts", "**/*.tsx"],
+	"compilerOptions": {
+		"lib": ["DOM", "DOM.Iterable", "ES2019"],
+		"isolatedModules": true,
+		"esModuleInterop": true,
+		"jsx": "react-jsx",
+		"moduleResolution": "node",
+		"resolveJsonModule": true,
+		"target": "ES2019",
+		"module": "esnext",
+		"strict": true,
+		"baseUrl": ".",
+		"paths": {
+			"~/*": ["./app/*"],
+			"@components/*": [
+				"./app/components/*",
+				"./app/features/blog/components/*",
+				"./app/features/github/components/*",
+				"./app/features/home/components/*"
+			],
+			"@blog/*": ["./app/features/blog/*"],
+			"@github/*": ["./app/features/github/*"],
+			"@home/*": ["./app/features/github/*"]
+		},
+		"noEmit": true
+	}
 }
 ```
 
 Ça me permet plus tard d'accéder à mes features en faisant `import { Tabs } from '@blog/components/tabs'` par exemple.  
-La configuration `@components/*` devait me permettre d'accéder facilement à n'importe quel composant, notamment depuis mes articles. Pour l'instant je n'ai pas eu besoin d'importer de composant autres que les bloc de codes à onglet que vous avec déjà pu voir.
+La configuration `@components/*` devait me permettre d'accéder facilement à n'importe quel composant, notamment depuis mes articles. Pour l'instant je n'ai pas eu besoin d'importer de composant autres que les bloc de codes à onglet que vous avez déjà pu voir.
 
 ### Mise en place de Tailwind
 
 Pour installer Tailwind d'une façon qui me convenais sur Remix Template, j'ai utilisé PostCSS et le plugin Tailwind.  
 Cette approche est plus flexible et permet d'installer d'autres plugins que je trouve intéressant comme `autoprefixer` par exemple.
 
-Pour mon site, j'ai décidé de n'utiliser que Tailwind "pur" sans CSS supplémentaire (dans la mesure du possible) et donc cette approche était un peu trop compliqué pour peu de chose.
+Pour mon site, j'ai décidé de n'utiliser que Tailwind "pur" sans CSS supplémentaire (dans la mesure du possible) et donc cette approche était un peu compliqué pour trop peu de chose.
 
 Je me suis donc tourné vers [remix-tailwind](https://github.com/itsMapleLeaf/remix-tailwind), un outil très simple que je vous recommande si vous avez besoin de rapidement intégrer Tailwind dans vos projets Remix.
 
@@ -169,37 +168,37 @@ Il écoute deux actions, la première c'est toutes les requêtes qui sortent de 
 ```javascript
 // On s'abonne à toutes les requêtes sortantes
 self.addEventListener("fetch", (event) => {
-  // On récupère des infos sur cette requête
-  let url = new URL(event.request.url);
-  let method = event.request.method;
+	// On récupère des infos sur cette requête
+	let url = new URL(event.request.url);
+	let method = event.request.method;
 
-  // On ignore toutes les requêtes autre que GET car notre but c'est de mettre en cache des données
-  if (method.toLowerCase() !== "get") return;
+	// On ignore toutes les requêtes autre que GET car notre but c'est de mettre en cache des données
+	if (method.toLowerCase() !== "get") return;
 
-  // On filtre pour ne se concentrer que sur certaines données :
-  if (
-    url.pathname.startsWith("/assets/") || // On met en cache les assets (icones, fonts, images...)
-    url.pathname.startsWith("/build/") || // On met en cache les fichiers de build de Remix (bundle js)
-    url.pathname.startsWith("/tailwindcss") || // On met en cache le résultat du fichier css généré de TW
-    url.hostname.includes("fonts.gstatic.com") // On met en cache les fonts chargées depuis Google Fonts
-  ) {
-    // Dans le cas où on veux s'occuper de cette requête...
-    event.respondWith(
-      // ...on commence par ouvrir le cache du navigateur (à une version précise, voir plus loin)
-      caches.open(version).then(async (cache) => {
-        // Si on trouve cette données dans notre cache, on la retourne simplement
-        let cacheResponse = await cache.match(event.request);
-        if (cacheResponse) return cacheResponse;
+	// On filtre pour ne se concentrer que sur certaines données :
+	if (
+		url.pathname.startsWith("/assets/") || // On met en cache les assets (icones, fonts, images...)
+		url.pathname.startsWith("/build/") || // On met en cache les fichiers de build de Remix (bundle js)
+		url.pathname.startsWith("/tailwindcss") || // On met en cache le résultat du fichier css généré de TW ()
+		url.hostname.includes("fonts.gstatic.com") // On met en cache les fonts chargées depuis Google Fonts
+	) {
+		// Dans le cas où on veux s'occuper de cette requête...
+		event.respondWith(
+			// ...on commence par ouvrir le cache du navigateur (à une version précise, voir plus loin)
+			caches.open(version).then(async (cache) => {
+				// Si on trouve cette donnée dans notre cache, on la retourne simplement
+				let cacheResponse = await cache.match(event.request);
+				if (cacheResponse) return cacheResponse;
 
-        // Si elle n'est pas encore mise en cache, on la récupère normalement et on la met en cache
-        // comme ça la prochaine requête sera servie depuis le cache
-        let fetchResponse = await fetch(event.request);
-        cache.put(event.request, fetchResponse.clone());
+				// Si elle n'est pas encore mise en cache, on la récupère normalement et on la met en cache
+				// comme ça la prochaine requête sera servie depuis le cache
+				let fetchResponse = await fetch(event.request);
+				cache.put(event.request, fetchResponse.clone());
 
-        return fetchResponse;
-      })
-    );
-  }
+				return fetchResponse;
+			})
+		);
+	}
 });
 ```
 
@@ -220,44 +219,44 @@ const version = "1.0.2";
 
 // On s'abonne à l'évenement d'activation
 self.addEventListener("activate", (event) => {
-  event.waitUntil(
-    // On boucle sur chaques données mise en cache...
-    caches.keys().then((keys) => {
-      return Promise.all(
-        keys.map((cache) => {
-          // ...et si la version est différente de la version actuelle
-          // on supprime la donnée en cache
-          if (cache != version) {
-            return caches.delete(cache);
-          }
-        })
-      );
-    })
-  );
+	event.waitUntil(
+		// On boucle sur chaques données mise en cache...
+		caches.keys().then((keys) => {
+			return Promise.all(
+				keys.map((cache) => {
+					// ...et si la version est différente de la version actuelle
+					// on supprime la donnée en cache
+					if (cache != version) {
+						return caches.delete(cache);
+					}
+				})
+			);
+		})
+	);
 });
 ```
 
 </Tabs>
 
 Ce système permet donc d'éviter que les utilisateurs gardent en cache la mauvaise version du fichier css de Tailwind par exemple.  
-Le seul bémol c'est qu'il faut se rappeler de l'incrémenter, mais cet désavantage est rapidement oublié car j'ai pris l'habitude d'incrémenter aussi la version dans le `package.json`.
+Le seul bémol c'est qu'il faut penser à l'incrémenter, mais cet inconvénient est rapidement oublié car j'ai pris l'habitude d'incrémenter aussi la version dans le `package.json`.
 
 #### Lancement du service worker
 
-Le problème avec les service workers c'est qu'en mode développement c'est très désagréable d'avoir ce cache car les données changent forcément souvent et qu'il est hors de question d'incrémenter le numéro de version à chacun de ces changement.
+Le problème avec les service workers c'est qu'en mode développement c'est très désagréable d'avoir ce cache car les données changent forcément souvent et qu'il est hors de question d'incrémenter le numéro de version à chacun de ces petits changement.
 
-Pour désactiver le lancement de mon service worker j'ai décidé d'ajouter un "lanceur" que j'ajoute au html de mes réponses ou pas, celui le mode (dev ou prod).
+Pour désactiver le lancement de mon service worker j'ai décidé d'ajouter un "lanceur" que j'ajoute au html de mes réponses ou non, selon le mode (dev ou prod).
 
 D'abord voici le lanceur :
 
 ```javascript
-// On regarde sur le navigateur supporte les services workers quand même
+// On regarde si le navigateur supporte les services workers
 if ("serviceWorker" in navigator) {
-  // On attend le chargement de la page...
-  window.addEventListener("load", () => {
-    // ...et on enregistre le service worker
-    navigator.serviceWorker.register("/sw.js");
-  });
+	// On attend le chargement de la page...
+	window.addEventListener("load", () => {
+		// ...et on enregistre le service worker (il va s'activer automatiquement)
+		navigator.serviceWorker.register("/sw.js");
+	});
 }
 ```
 
@@ -267,24 +266,24 @@ C'est un script très simpliste, pas besoin de s'étendre plus que ça dessus do
 
 ```tsx {13-15}
 export default function App() {
-  return (
-    <html className="h-full" lang="en" prefix="og: https://ogp.me/ns#">
-      <head>
-        <meta charSet="utf-8" />
-        {/* ... */}
-      </head>
-      <body className="h-full">
-        <Outlet />
-        <RouteChangeAnnouncement />
-        <ScrollRestoration />
-        <Scripts />
-        {process.env.NODE_ENV != "development" ? (
-          <script src="/sw_launcher.js" />
-        ) : null}
-        {process.env.NODE_ENV === "development" ? <LiveReload /> : null}
-      </body>
-    </html>
-  );
+	return (
+		<html className="h-full" lang="en" prefix="og: https://ogp.me/ns#">
+			<head>
+				<meta charSet="utf-8" />
+				{/* ... */}
+			</head>
+			<body className="h-full">
+				<Outlet />
+				<RouteChangeAnnouncement />
+				<ScrollRestoration />
+				<Scripts />
+				{process.env.NODE_ENV != "development" ? (
+					<script src="/sw_launcher.js" />
+				) : null}
+				{process.env.NODE_ENV == "development" ? <LiveReload /> : null}
+			</body>
+		</html>
+	);
 }
 ```
 
@@ -299,25 +298,25 @@ Enfin, pour obtenir une belle application lors de l'installation de la PWA il fa
 
 ```json
 {
-  "name": "Quentin Widlocher",
-  "short_name": "Quentin Widlocher",
-  "description": "🇫🇷 French web developer, amateur game developer and a learning enthusiast !",
-  "start_url": "/",
-  "icons": [
-    {
-      "src": "assets/icons/android-chrome-192x192.png",
-      "sizes": "192x192",
-      "type": "image/png"
-    },
-    {
-      "src": "assets/icons/android-chrome-512x512.png",
-      "sizes": "512x512",
-      "type": "image/png"
-    }
-  ],
-  "theme_color": "#0EA5E9",
-  "background_color": "#1E293B",
-  "display": "standalone"
+	"name": "Quentin Widlocher",
+	"short_name": "Quentin Widlocher",
+	"description": "🇫🇷 French web developer, amateur game developer and a learning enthusiast !",
+	"start_url": "/",
+	"icons": [
+		{
+			"src": "assets/icons/android-chrome-192x192.png",
+			"sizes": "192x192",
+			"type": "image/png"
+		},
+		{
+			"src": "assets/icons/android-chrome-512x512.png",
+			"sizes": "512x512",
+			"type": "image/png"
+		}
+	],
+	"theme_color": "#0EA5E9",
+	"background_color": "#1E293B",
+	"display": "standalone"
 }
 ```
 
@@ -327,34 +326,34 @@ Et pour fournir ce manifeste, je l'ajoute simplement aux liens de ma page dans `
 
 ```tsx {6,16}
 export const links: LinksFunction = () => {
-  return [
-    { rel: "stylesheet", href: cssuiCore },
-    { rel: "stylesheet", href: cssuiTooltip },
-    { rel: "stylesheet", href: "/tailwindcss" },
-    { rel: "manifest", href: "/manifest.json" },
-  ];
+	return [
+		{ rel: "stylesheet", href: cssuiCore },
+		{ rel: "stylesheet", href: cssuiTooltip },
+		{ rel: "stylesheet", href: "/tailwindcss" },
+		{ rel: "manifest", href: "/manifest.json" },
+	];
 };
 
 export default function App() {
-  return (
-    <html className="h-full" lang="en" prefix="og: https://ogp.me/ns#">
-      <head>
-        <meta charSet="utf-8" />
-        {/* ... */}
-        <Links />
-      </head>
-      <body className="h-full">
-        <Outlet />
-        <RouteChangeAnnouncement />
-        <ScrollRestoration />
-        <Scripts />
-        {process.env.NODE_ENV != "development" ? (
-          <script src="/sw_launcher.js" />
-        ) : null}
-        {process.env.NODE_ENV === "development" ? <LiveReload /> : null}
-      </body>
-    </html>
-  );
+	return (
+		<html className="h-full" lang="en" prefix="og: https://ogp.me/ns#">
+			<head>
+				<meta charSet="utf-8" />
+				{/* ... */}
+				<Links />
+			</head>
+			<body className="h-full">
+				<Outlet />
+				<RouteChangeAnnouncement />
+				<ScrollRestoration />
+				<Scripts />
+				{process.env.NODE_ENV != "development" ? (
+					<script src="/sw_launcher.js" />
+				) : null}
+				{process.env.NODE_ENV === "development" ? <LiveReload /> : null}
+			</body>
+		</html>
+	);
 }
 ```
 
