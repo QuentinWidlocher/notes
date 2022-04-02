@@ -1,6 +1,6 @@
 ---
 title: Create your own web framework - Part 2
-subtitle: The wheel we won't reinvent
+subtitle: The wheels we won't reinvent
 createdAt: "2022-04-02T00:00:00"
 series: Create your own web framework
 cover:
@@ -11,7 +11,8 @@ lang: en
 
 ## What won't we need to do
 
-Remember, in the last part, I made a list of all the things we won't have to create for our projet. In this list we can focus on the two main parts: File serving, custom code execution and templating
+Remember, in the last part, I made a list of all the things we won't have to create for our projet.  
+In this list we will focus on the two main parts: File serving, custom code execution and templating
 
 ## File serving
 
@@ -120,7 +121,7 @@ app.listen(3000);
 
 Except for the names of the functions we need to use, this should seem pretty obvious.
 
-There are some problems here we'll have to fix later though, such as nested files (we only serve the files at the root of the director) or the name of the route (we need to go to `/page.html` to see a file named like that, instead of the usual `/page`)
+There are some problems here we'll have to fix later though, such as nested files (we only serve the files at the root of the directory) or the name of the route (we need to go to `/page.html` to see a file named like that, instead of the usual `/page`)
 
 We'll also need to separate the serving of html file and the other assets such as CSS or client side Javascript.
 
@@ -128,12 +129,12 @@ We'll also need to separate the serving of html file and the other assets such a
 
 Of course, now that we can serve our files, we need to be able to read code inside those files and execute it.
 
-If the files where `.js` files, we could simple `import` or `require()` them, then execute the code.  
+If the files where simple `.js` files, we could simply `import` or `require()` them, then execute the code.  
 It's not as simple as that because our files will be `.html` with embedded Javascript code.
 
 We need to extract the code from the html file, and execute it.
 
-To separate the code from the html template, I chose to put the server-side code inside a `<script/>` tag with a `server` attribute, which is html compliant (works with IDE and every other tools), but is specific enough so we won't interpret code that's not meant for the server.
+To separate the code from the html template, I chose to put the server-side code inside a `<script/>` tag with a `server` attribute, which is html compliant (works with any IDE and every other tools), but is specific enough so we won't interpret code that's not meant for the server.
 
 Here is a look of what we want to achieve :
 
@@ -177,7 +178,7 @@ function parseHtml(template: string): [html: string, serverScript: string] {
 
 	// We get the server script inside the html using a
 	// basic querySelector and a CSS selector
-	// Here [server] means "whith the server attribute"
+	// Here [server] means "with the server attribute"
 	let serverScriptTag = root.querySelector("script[server]");
 
 	// We extract the script and delete the tag (it should never get sent to the client)
@@ -196,7 +197,7 @@ The HTML parser here does all the heavy lifting for us, we can work with the HTM
 
 ### Executing the server code
 
-Now that we have our serve code as a string, how can we run the code, so that we can print our example to the console ?
+Now that we have our server code as a string, how can we run the code, so that we can print our example to the console ?
 
 #### Two methods to execute code
 
@@ -218,9 +219,9 @@ let fn = new Function("console.log(secretUserToken)");
 fn();
 ```
 
-Both can run code based on a string, but the function constructor is scoped better, and can also take arguments while returning a result.
+Both methods can run code based on a string, but the function constructor is better scoped, and can also take arguments while returning a result.
 
-All in all, we should use the function constructor every time over `eval()`.
+All in all, we should choose the function constructor every time over `eval()`.
 
 #### Using the function constructor
 
@@ -246,7 +247,7 @@ Now, each time we try to access our file, `5` is printed inside the NodeJS conso
 
 #### Using outside values inside our server code
 
-What if we _need_ values from the outside. Maybe we'd like to have access to the Express `req` parameter, which include a lot of useful informations like the URL parameters (things like `?query=something&page=1`), a route param (we'll look at that just after) or even the IP of the device requesting the page.
+What if we _need_ values from the outside. Maybe we'd like to have access to the Express `req` parameter, which include a lot of useful informations like the URL parameters (things like `?query=something&page=1`), a route param (we'll look at that next time) or even the IP of the device requesting the page.
 
 We can provide parameters to our custom function, when we create it :
 
@@ -360,7 +361,7 @@ Here, each time we access the page, we log "Hello, World!" inside the NodeJS con
 
 The last thing already existing in our tools that we only need to setup is the templating system.
 
-There exist a _lot_ of templating languages, such as [Handlebars](https://handlebarsjs.com/), [EJS](https://ejs.co/), [pug](https://pugjs.org/api/getting-started.html) etc.  
+There are a _lot_ of templating languages, such as [Handlebars](https://handlebarsjs.com/), [EJS](https://ejs.co/), [pug](https://pugjs.org/api/getting-started.html) etc.  
 Even JSX can be considered a templating language.
 
 Each are very powerful and very easy to use. But why should we use external tools when Javascript itself provide us with a very versatile templating system ?
@@ -376,7 +377,7 @@ let age = 23;
 // "My name is Quentin, I'm 23 years old"
 ```
 
-String templates helps reduce the complexity of such concatenation :
+Template strings helps reduce the complexity of such concatenation :
 
 ```javascript
 let name = "Quentin";
@@ -391,6 +392,7 @@ By using this `${}` escape sequence we can insert any Javascript expression insi
 let x = 3;
 `${x} + 2 = ${x + 2}`;
 // 3 + 2 = 5
+// 40 + 2 = 42
 ```
 
 As soon as what's inside a `${}` _returns_ or _evaluate to_ something, it can be displayed as a string.  
@@ -420,7 +422,7 @@ Here are your items :
 */
 ```
 
-Here we used `.join('\n')` because `.map()` returns an array of strings and we want to display them, separated by a return.  
+Here we used `.join('\n')` because `.map()` returns an array of strings and we want to display them, separated by a new line.  
 By default Javascript prints them separated by commas and it can look pretty ugly.
 
 Of course, it's not always the most efficient way of working, but this is a way to show you that **anything** can be displayed with template strings, and they are built inside Javascript so no need to look further.
@@ -441,7 +443,7 @@ function parseStaticTemplateLiteral(templateLiteral: string): string {
 	return fn();
 }
 
-// Not how we don't use ` here, it's a regular string
+// Note how we don't use ` here, it's a regular string
 console.log(parseStaticTemplateLiteral("2 + 3 = ${ 2 + 3 }"));
 // 2 + 3 = 5
 ```
@@ -484,6 +486,7 @@ app.get(`/${nextDir.name}`, async (req, res) => {
 	let serverFunction = new Function("req", serverCode);
 
 	// I call the object containing our data the "bag"
+	// As in "big bag full of any data"
 	let bag = serverFunction(req);
 
 	// We provide the bag to the template
@@ -511,9 +514,11 @@ app.get(`/${nextDir.name}`, async (req, res) => {
 	</head>
 	<body>
 		${/* Since the entire template is treated as a template string we can
-		display variable like this (this comment is also a real comment, but we NEED
-		to return at least an empty string after the comment) */ ''}
+		display variables like this */ ''}
 		<h1>${title}</h1>
+
+		${/* Theses comments are also real comments, but we NEED to return at least
+		an empty string after the comment */ ''}
 
 		<h2>
 			Your shopping cart contains ${items.length} product${items.length >= 2 ?
@@ -521,8 +526,9 @@ app.get(`/${nextDir.name}`, async (req, res) => {
 		</h2>
 		<ul>
 			${items.map((item, index) => `
-			  <li>${index + 1}. ${item}</li>
+			<li>${index + 1}. ${item}</li>
 			`).join('')}
+		</ul>
 	</body>
 </html>
 ```
@@ -570,9 +576,7 @@ function parseHtml(template: string): [html: string, serverScript: string] {
 	// We use the node-html-parser to parse the html and get a dom tree
 	let root = htmlParse(template);
 
-	// We get the server script inside the html using a
-	// basic querySelector and a CSS selector
-	// Here [server] means "whith the server attribute"
+	// We get the server script inside the html
 	let serverScriptTag = root.querySelector("script[server]");
 
 	// We extract the script and delete the tag (it should never get sent to the client)
