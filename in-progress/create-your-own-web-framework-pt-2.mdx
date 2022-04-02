@@ -1,0 +1,636 @@
+---
+title: Create your own web framework - Part 2
+subtitle: The wheel we won't reinvent
+createdAt: "2022-04-02T00:00:00"
+series: Create your own web framework
+cover:
+  src: https://images.pexels.com/photos/273886/pexels-photo-273886.jpeg
+  alt: Unrelated picture of a white sailboat on water
+lang: en
+---
+
+## What won't we need to do
+
+Remember, in the last part, I made a list of all the things we won't have to create for our projet. In this list we can focus on the two main parts: File serving, custom code execution and templating
+
+## File serving
+
+Creating a web server from scratch can and **would** be difficult. It would also make the process of creation a true nightmare for our project scope.
+
+That's why we'll be using the famous NodeJS web server : [Express](https://expressjs.com/)
+
+### How does Express works
+
+There are a lot of ways to design a web server but the way Express works is pretty straightforward.
+
+Here is the most simple example I can think of :
+
+```javascript
+// We import the express object
+import express from "express";
+
+// 1. We use the object default function to create an express app
+const app = express();
+
+// 2. We tell our app, to listen to a GET request on the '/' route
+app.get("/", (req, res) => {
+	// We use the `res` (response) object to send back some data
+	res.send("hello world");
+});
+
+// 3. We tell the app it can starts on the port 3000
+app.listen(3000);
+```
+
+In this example, we see three steps :
+
+1. The creation of the server
+2. The setting up of **routes** to tell the server what to expect and what to answer
+3. The launch of the set-up app, at the very end
+
+With this very simple example you can guess how we're going to create our own framework. Here are the steps we'll do :
+
+1. We'll create the server, and read all of our pages
+2. We'll set up a route for each page, so when visited, the server will answer with the actual html of the page
+3. We'll launch the app
+
+### Serving files with Express
+
+#### Using the `static` middleware
+
+Express has a built-in way to serve files thanks to a **middleware**.
+
+Middlewares are kind of plugins for our server, and can listen to every route, and take actions without interfering with our code.
+
+To serve files with Express, we can use the built-in middleware called `static`, available in the `express` object :
+
+```javascript
+import express from "express";
+
+const app = express();
+
+// We declare the usage of the static middleware
+app.use(express.static("file-dir"));
+
+app.listen(3000);
+```
+
+Here, each files in `./file-dir/` will be served at the root of our server. For example the file `./file-dir/example.txt` would be available at `http://localhost:3000/example.txt`.
+
+#### Serving files manually
+
+That look pretty useful and really easy to do, except there is a major problem : we cannot do anything with the files we serve !
+
+Any file would be served as it is, but we need to have some kind of code execution later, with a templating system and all that.
+
+That means the `static` middleware won't cut it, we need to manually serve our files 😱
+
+Don't worry it's way easier than it sounds, first we need to get the list of our files with the node filesystem API :
+
+```typescript
+// Here we import the async version of the filesystem API
+import { opendir, readFile } from "fs/promises";
+import express from "express";
+
+const app = express();
+
+// We list the files in the directory
+let dir = await opendir("./file-dir");
+
+// We loop over all the files in the directory
+// We use a while loop to check if the dir.read() still
+// returns a new file each time
+let nextDir = await dir.read();
+while (nextDir != null) {
+	// We read the file content
+	let fileBuffer = await readFile(`./file-dir/${nextDir.name}`);
+	let file = fileBuffer.toString();
+
+	// We create a GET endpoint, and we serve back the file
+	app.get(`/${nextDir.name}`, async (req, res) => {
+		res.send(file);
+	});
+
+	// We go to the next file
+	nextDir = await dir.read();
+}
+
+app.listen(3000);
+```
+
+Except for the names of the functions we need to use, this should seem pretty obvious.
+
+There are some problems here we'll have to fix later though, such as nested files (we only serve the files at the root of the director) or the name of the route (we need to go to `/page.html` to see a file named like that, instead of the usual `/page`)
+
+We'll also need to separate the serving of html file and the other assets such as CSS or client side Javascript.
+
+## Custom code execution
+
+Of course, now that we can serve our files, we need to be able to read code inside those files and execute it.
+
+If the files where `.js` files, we could simple `import` or `require()` them, then execute the code.  
+It's not as simple as that because our files will be `.html` with embedded Javascript code.
+
+We need to extract the code from the html file, and execute it.
+
+To separate the code from the html template, I chose to put the server-side code inside a `<script/>` tag with a `server` attribute, which is html compliant (works with IDE and every other tools), but is specific enough so we won't interpret code that's not meant for the server.
+
+Here is a look of what we want to achieve :
+
+```html
+<script server>
+	function add2(x) {
+		return x + 2;
+	}
+
+	console.log(add2(3)); // should print 5 in the SERVER console, not in the browser
+</script>
+
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8" />
+		<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+	</head>
+	<body>
+		<h1>Hello, World!</h1>
+	</body>
+</html>
+```
+
+When we'll access the route, we want to print 5 to the NodeJs console on the server (not in the browser) and serve this file **without** the server code.
+
+### Extracting the server script tag
+
+Since we're working with valid HTML here, instead of using complex regex to get the server script tag, we can simply use a DOM parser such as `node-html-parser` (or anything else really).
+
+We can then extract the code, and remove the tag from the response :
+
+```typescript
+import { parse as htmlParse } from "node-html-parser";
+
+// We put the HTML content here and get back our HTML and the server code
+function parseHtml(template: string): [html: string, serverScript: string] {
+	// We use the node-html-parser to parse the html and get a dom tree
+	let root = htmlParse(template);
+
+	// We get the server script inside the html using a
+	// basic querySelector and a CSS selector
+	// Here [server] means "whith the server attribute"
+	let serverScriptTag = root.querySelector("script[server]");
+
+	// We extract the script and delete the tag (it should never get sent to the client)
+	let serverScript = "";
+	if (serverScriptTag) {
+		serverScript = serverScriptTag.innerHTML;
+		serverScriptTag.remove();
+	}
+
+	// We return both the HTML without the tag AND the content of the tag
+	return [root.innerHTML, serverScript];
+}
+```
+
+The HTML parser here does all the heavy lifting for us, we can work with the HTML file as if we were inside client-side javascript code, working with the DOM.
+
+### Executing the server code
+
+Now that we have our serve code as a string, how can we run the code, so that we can print our example to the console ?
+
+#### Two methods to execute code
+
+Maybe you've heard of the `eval()` function that can, well, evaluate arbitrary code in Javascript.  
+We could use that, but the better idea would be to create a new _function_ with arbitrary code, so that the executed code **cannot access outside variables**.
+
+Let's look at this example :
+
+```javascript
+let secretUserToken = "IM-SECRET";
+
+// This can access the secret !
+// This prints IM-SECRET to the console
+eval("console.log(secretUserToken)");
+
+// This cannot access the secret
+// This prints undefined to the console
+let fn = new Function("console.log(secretUserToken)");
+fn();
+```
+
+Both can run code based on a string, but the function constructor is scoped better, and can also take arguments while returning a result.
+
+All in all, we should use the function constructor every time over `eval()`.
+
+#### Using the function constructor
+
+Now we can pass the server code to a function constructor and execute it
+
+```typescript
+// ... Above is the express setup
+
+app.get(`/${nextDir.name}`, async (req, res) => {
+	// We extract our code from the template
+	let [html, serverCode] = parseHtml(file);
+
+	// We run the code, while inside the server
+	let serverFunction = new Function(serverCode);
+	serverFunction();
+
+	// We send back the html without the server script tag
+	res.send(html);
+});
+```
+
+Now, each time we try to access our file, `5` is printed inside the NodeJS console, and we see our html page.
+
+#### Using outside values inside our server code
+
+What if we _need_ values from the outside. Maybe we'd like to have access to the Express `req` parameter, which include a lot of useful informations like the URL parameters (things like `?query=something&page=1`), a route param (we'll look at that just after) or even the IP of the device requesting the page.
+
+We can provide parameters to our custom function, when we create it :
+
+<Tabs tabs={['server.ts', 'page.html']}>
+  
+```typescript
+app.get(`/${nextDir.name}`, async (req, res) => {
+	let [html, serverCode] = parseHtml(file);
+
+    // The code should be the last parameter
+    // Every string before is a named parameter
+    let serverFunction = new Function("request", serverCode);
+
+    // We can then pass our parameters, based on the order
+    // Not on the name
+    serverFunction(req);
+
+    res.send(html);
+
+});
+
+````
+
+```html
+<script server>
+  // Since we named our parameter "request", we can access it here
+	console.log(request.ip);
+</script>
+
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8" />
+		<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+	</head>
+	<body>
+		<h1>Hello, World!</h1>
+	</body>
+</html>
+````
+
+</Tabs>
+
+Here, when the server script is executed, the `req` parameter is passed as a `request` parameter, so we can use it inside the server code. Isn't that cool ?
+
+That opens a lot of possibilities too !
+
+#### Using values generated from our server code
+
+Later, when we'll have a templating system, we'll need to use the server code to compute data we can display.
+
+For now, how can we get back data from the server code (even if we cannot do anything useful with it) ?
+
+Dynamically created functions, as their static counterpart can accepts inputs _and_ return outputs !
+
+See this example :
+
+```javascript
+let add2 = new Function("x", "return x + 2");
+console.log(add2(3)); // prints 5 as expected
+```
+
+When we create the function, we can declare its inputs, and what is returned from the code, is returned by the function when executed.
+
+That means we can tell our server code to return something we can use later (in the templating system for example.)
+
+<Tabs tabs={['server.ts', 'page.html']}>
+
+```typescript
+app.get(`/${nextDir.name}`, async (req, res) => {
+	let [html, serverCode] = parseHtml(file);
+
+	// The code should be the last parameter
+	// Every string before is a named parameter
+	let serverFunction = new Function("request", serverCode);
+
+	// We can then pass our parameters, based on the order
+	// Not on the name
+	let result = serverFunction(req);
+
+	console.log(result);
+
+	res.send(html);
+});
+```
+
+```html
+<script server>
+	return "Hello, World!";
+</script>
+
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8" />
+		<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+	</head>
+	<body>
+		<h1>Hello, World!</h1>
+	</body>
+</html>
+```
+
+</Tabs>
+
+Here, each time we access the page, we log "Hello, World!" inside the NodeJS console.
+
+## Templating
+
+The last thing already existing in our tools that we only need to setup is the templating system.
+
+There exist a _lot_ of templating languages, such as [Handlebars](https://handlebarsjs.com/), [EJS](https://ejs.co/), [pug](https://pugjs.org/api/getting-started.html) etc.  
+Even JSX can be considered a templating language.
+
+Each are very powerful and very easy to use. But why should we use external tools when Javascript itself provide us with a very versatile templating system ?
+
+### String templates in Javascript
+
+The basic way of concatenating string in Javascript is this :
+
+```javascript
+let name = "Quentin";
+let age = 23;
+"My name is " + name + ", I'm " + age + " years old";
+// "My name is Quentin, I'm 23 years old"
+```
+
+String templates helps reduce the complexity of such concatenation :
+
+```javascript
+let name = "Quentin";
+let age = 23;
+`My name is ${name}, I'm ${age} years old`;
+// "My name is Quentin, I'm 23 years old"
+```
+
+By using this `${}` escape sequence we can insert any Javascript expression inside.
+
+```javascript
+let x = 3;
+`${x} + 2 = ${x + 2}`;
+// 3 + 2 = 5
+```
+
+As soon as what's inside a `${}` _returns_ or _evaluate to_ something, it can be displayed as a string.  
+Here is a more advanced example, with a conditional rendering :
+
+```javascript
+`Your shopping cart contains ${items.length} product${
+	items.length >= 2 ? "s" : ""
+}`;
+// Your shopping cart contains 1 product
+// Your shopping cart contains 2 products
+// Your shopping cart contains 42 products
+```
+
+And the best thing is, you can **nest** template strings inside template strings !
+
+```javascript
+let items = ["Pen", "Paper", "Calculator"];
+`Here are your items :\n${items
+	.map((item, index) => `${index + 1}. ${item}`)
+	.join("\n")}`;
+/*
+Here are your items :
+1. Pen
+2. Paper
+3. Calculator
+*/
+```
+
+Here we used `.join('\n')` because `.map()` returns an array of strings and we want to display them, separated by a return.  
+By default Javascript prints them separated by commas and it can look pretty ugly.
+
+Of course, it's not always the most efficient way of working, but this is a way to show you that **anything** can be displayed with template strings, and they are built inside Javascript so no need to look further.
+
+### Using string templates with our html file
+
+What if we treated our entire html as a template string, could we "evaluate" this regular string as if it were a template string ?
+
+We can with a bit of magic :
+
+```typescript
+function parseStaticTemplateLiteral(templateLiteral: string): string {
+	// Here we create a function that returns the *evaluation* of a template string
+	// And we pass our "fake" template string to it
+	let fn = new Function("return `" + templateLiteral + "`");
+
+	// Now when executed, we get back our template
+	return fn();
+}
+
+// Not how we don't use ` here, it's a regular string
+console.log(parseStaticTemplateLiteral("2 + 3 = ${ 2 + 3 }"));
+// 2 + 3 = 5
+```
+
+Of course, to be really useful, we'll need to provide our template string with variables from the outside.
+
+```typescript
+function parseStaticTemplateLiteral(
+	templateLiteral: string,
+	context: Object // An object containing any values
+): string {
+	let fn = new Function(
+		...Object.keys(context), // We pass every object keys as a parameter name
+		"return `" + templateLiteral + "`"
+	);
+
+	// We pass every object values a an actual parameter, in the same order
+	return fn(...Object.values(context));
+}
+
+console.log(
+	parseStaticTemplateLiteral("My name is ${name}", { name: "Quentin" })
+);
+// My name is Quentin
+```
+
+With this, we can display anything as long as we provide the right inputs.
+
+### Plugging the templating system with our server code
+
+Now, we can use what our server code gives us back, and give it to the entire template !
+That way, we can compute anything inside the server code, and use it inside our template
+
+<Tabs tabs={['server.ts', 'page.html', 'Served HTML']}>
+
+```typescript
+app.get(`/${nextDir.name}`, async (req, res) => {
+	let [html, serverCode] = parseHtml(file);
+
+	let serverFunction = new Function("req", serverCode);
+
+	// I call the object containing our data the "bag"
+	let bag = serverFunction(req);
+
+	// We provide the bag to the template
+	let evaluatedTemplate = parseStaticTemplateLiteral(html, bag);
+
+	res.send(evaluatedTemplate);
+});
+```
+
+```html
+<script server>
+	// This is the bag, title and items are now available inside the template
+	return {
+		title: "Hello, World!",
+		items: ["Pen", "Paper", "Calculator"],
+	};
+</script>
+
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8" />
+		<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+	</head>
+	<body>
+		${/* Since the entire template is treated as a template string we can
+		display variable like this (this comment is also a real comment, but we NEED
+		to return at least an empty string after the comment) */ ''}
+		<h1>${title}</h1>
+
+		<h2>
+			Your shopping cart contains ${items.length} product${items.length >= 2 ?
+			"s" : ""}
+		</h2>
+		<ul>
+			${items.map((item, index) => `
+			  <li>${index + 1}. ${item}</li>
+			`).join('')}
+	</body>
+</html>
+```
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8" />
+		<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+	</head>
+	<body>
+		<h1>Hello, World!</h1>
+
+		<h2>Your shopping cart contains 3 products</h2>
+		<ul>
+			<li>1. Pen</li>
+			<li>2. Paper</li>
+			<li>3. Calculator</li>
+		</ul>
+	</body>
+</html>
+```
+
+</Tabs>
+
+---
+
+Phew, that's a lot of things to process, but we did everything step by step.  
+You can see that with two "basic" dependencies and less than 100 lines of code we achieved a pretty decent web framework that does a lot of things.
+
+In the next part, we'll clean this code, fix some small problems and add very powerful yet simple features to our existing system (like asynchronous code !).
+
+<details>
+  <summary>Here is the entire `server.js` code</summary>
+
+```typescript
+import { opendir, readFile } from "fs/promises";
+import express from "express";
+import { parse as htmlParse } from "node-html-parser";
+
+// We put the HTML content here and get back our HTML and the server code
+function parseHtml(template: string): [html: string, serverScript: string] {
+	// We use the node-html-parser to parse the html and get a dom tree
+	let root = htmlParse(template);
+
+	// We get the server script inside the html using a
+	// basic querySelector and a CSS selector
+	// Here [server] means "whith the server attribute"
+	let serverScriptTag = root.querySelector("script[server]");
+
+	// We extract the script and delete the tag (it should never get sent to the client)
+	let serverScript = "";
+	if (serverScriptTag) {
+		serverScript = serverScriptTag.innerHTML;
+		serverScriptTag.remove();
+	}
+
+	// We return both the HTML without the tag AND the content of the tag
+	return [root.innerHTML, serverScript];
+}
+
+function parseStaticTemplateLiteral(
+	templateLiteral: string,
+	context: Object // An object containing any values
+): string {
+	let fn = new Function(
+		...Object.keys(context), // We pass every object keys as a parameter name
+		"return `" + templateLiteral + "`"
+	);
+
+	// We pass every object values a an actual parameter, in the same order
+	return fn(...Object.values(context));
+}
+
+const app = express();
+
+// We list the files in the directory
+let dir = await opendir("./routes");
+
+// We loop over all the files in the directory
+let nextDir = await dir.read();
+while (nextDir != null) {
+	// We read the file content
+	let fileBuffer = await readFile(`./routes/${nextDir.name}`);
+	let file = fileBuffer.toString();
+
+	// We create a GET endpoint, and we serve back the file
+	app.get(`/${nextDir.name}`, async (req, res) => {
+		let [html, serverCode] = parseHtml(file);
+
+		let serverFunction = new Function("req", serverCode);
+
+		// I call the object containing our data the "bag"
+		let bag = serverFunction(req);
+
+		// We provide the bag to the template
+		let evaluatedTemplate = parseStaticTemplateLiteral(html, bag);
+
+		res.send(evaluatedTemplate);
+	});
+
+	// We go to the next file
+	nextDir = await dir.read();
+}
+
+app.listen(3000);
+```
+
+</details>
