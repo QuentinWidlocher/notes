@@ -35,7 +35,7 @@ On peux faire un diagramme pour se représenter le fonctionnement :
 
 ```mermaid
 sequenceDiagram
-    actor Utilisateur
+    participant Utilisateur
     participant Application
     participant Navigateur
     participant Serveur
@@ -71,7 +71,7 @@ Si on reprend le diagramme du dessus à la mode PHP (SSR) ça nous donne :
 
 ```mermaid
 sequenceDiagram
-    actor Utilisateur
+    participant Utilisateur
     participant Navigateur
     participant Serveur
     Utilisateur->>Navigateur: Ouvre le lien de l'application
@@ -94,7 +94,7 @@ Lors de l'arrivée du Javascript (mais avant le "boom"), il y avait aussi des sc
 
 ```mermaid
 sequenceDiagram
-    actor Utilisateur
+    participant Utilisateur
     participant Navigateur
     participant Serveur
     Utilisateur->>Navigateur: Ouvre le lien de l'application
@@ -137,7 +137,7 @@ Tout d'abord en SSR :
 
 ```mermaid
 sequenceDiagram
-    actor Utilisateur
+    participant Utilisateur
     participant Navigateur
     participant Serveur
     Utilisateur->>Navigateur: Ouvre le lien de l'application
@@ -162,7 +162,7 @@ Regardons maintenant ce fonctionnement avec une SPA :
 
 ```mermaid
 sequenceDiagram
-    actor Utilisateur
+    participant Utilisateur
     participant Application
     participant Navigateur
     participant Serveur
@@ -260,7 +260,7 @@ Mettons à jour notre diagramme en prenant en compte l'hydratation :
 
 ```mermaid
 sequenceDiagram
-    actor Utilisateur
+    participant Utilisateur
     participant Application
     participant Navigateur
     participant Serveur
