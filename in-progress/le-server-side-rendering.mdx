@@ -83,34 +83,6 @@ Un changement de page est géré nativement par le navigateur et réitère une d
 
 Lors de l'arrivée du Javascript (mais avant le "boom"), il y avait aussi des script exécutés sur les pages pour rendre le tout un peu dynamique.
 
-<details>
-<summary>Ici le diagramme si on prend ces scripts en compte</summary>
-
-```mermaid
-sequenceDiagram
-    participant Utilisateur
-    participant Navigateur
-    participant Serveur
-    Utilisateur->>Navigateur: Ouvre le lien de l'application
-    Navigateur->>Serveur: Demande la page
-    Serveur->>Navigateur: Renvoi une page HTML formée
-    Note over Navigateur: L'application s'affiche à l'écran
-    Navigateur->>Serveur: Demande le script
-    Serveur->>Navigateur: Renvoi le script
-    Note over Navigateur: Exécute le script
-    Utilisateur->>Navigateur: Change de page
-    Navigateur->>Serveur: Demande la page
-    Serveur->>Navigateur: Renvoi une page HTML formée
-    Note over Navigateur: L'application affiche une nouvelle page
-    Navigateur->>Serveur: Demande le script
-    Serveur->>Navigateur: Renvoi le script
-    Note over Navigateur: Exécute le script
-```
-
-A noter que dans la plupart des cas, ces scripts ne sont pas bloquant donc l'utilisateur peut changer de page avant de recevoir les scripts.
-
-</details>
-
 ## Pourquoi on revient en arrière alors ?
 
 C'est vrai ça, on a quitté les applications SSR parce qu'elles étaient trop statiques (principalement), et si saupoudrer du Javascript par dessus aidait un peu, ça ne permettait pas d'offrir des applications aussi riche que ce qu'il est possible d'obtenir avec ~~trop~~ plus de Javascript.
