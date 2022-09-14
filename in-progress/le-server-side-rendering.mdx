@@ -33,25 +33,23 @@ Une fois récupéré, ce script va pouvoir commencer à afficher des information
 
 On peux faire un diagramme pour se représenter le fonctionnement :
 
-<Graph graph={`
-\`\`\`mermaid
+<div class="mermaid">
 sequenceDiagram
-    participant Utilisateur
-    participant Application
-    participant Navigateur
-    participant Serveur
-    Utilisateur->>Navigateur: Ouvre le lien de l'application
-    Navigateur->>Serveur: Demande la page
-    Serveur->>Navigateur: Renvoi une page HTML
-    Note right of Navigateur: Le HTML contient une balise script
-    Navigateur->>Serveur: Demande le script
-    Serveur->>Navigateur: Renvoi le script
-    Navigateur->>Application: Exécute le script
-    Note over Application: L'application s'affiche à l'écran
-    Utilisateur->>Application: Change de page
-    Note over Application: L'application affiche une nouvelle page
-\`\`\`
-`}/>
+  participant Utilisateur
+  participant Application
+  participant Navigateur
+  participant Serveur
+  Utilisateur->>Navigateur: Ouvre le lien de l'application
+  Navigateur->>Serveur: Demande la page
+  Serveur->>Navigateur: Renvoi une page HTML
+  Note right of Navigateur: Le HTML contient une balise script
+  Navigateur->>Serveur: Demande le script
+  Serveur->>Navigateur: Renvoi le script
+  Navigateur->>Application: Exécute le script
+  Note over Application: L'application s'affiche à l'écran
+  Utilisateur->>Application: Change de page
+  Note over Application: L'application affiche une nouvelle page
+</div>
 
 Ici, je fait la distinction entre le *navigateur* et *l'application* :
 
