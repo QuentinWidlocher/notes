@@ -34,8 +34,8 @@ Une fois récupéré, ce script va pouvoir commencer à afficher des information
 
 On peux faire un diagramme pour se représenter le fonctionnement :
 
-{`
-<div class="mermaid">
+<div className="mermaid">
+  {`
 sequenceDiagram
   participant Utilisateur
   participant Application
@@ -51,8 +51,8 @@ sequenceDiagram
   Note over Application: L'application s'affiche à l'écran
   Utilisateur->>Application: Change de page
   Note over Application: L'application affiche une nouvelle page
-</div>
 `}
+</div>
 
 Ici, je fait la distinction entre le _navigateur_ et _l'application_ :
 
@@ -73,13 +73,20 @@ Avant Javascript, c'était PHP qui était sur le devant de la scène, et PHP c'�
 Si on reprend le diagramme du dessus à la mode PHP (SSR) ça nous donne :
 
 <div className="mermaid">
-  sequenceDiagram participant Utilisateur participant Navigateur participant
-  Serveur Utilisateur->>Navigateur: Ouvre le lien de l'application
-  Navigateur->>Serveur: Demande la page Serveur->>Navigateur: Renvoi une page
-  HTML formée Note over Navigateur: L'application s'affiche à l'écran
-  Utilisateur->>Navigateur: Change de page Navigateur->>Serveur: Demande la page
-  Serveur->>Navigateur: Renvoi une page HTML formée Note over Navigateur:
-  L'application affiche une nouvelle page
+  {`
+sequenceDiagram
+    participant Utilisateur
+    participant Navigateur
+    participant Serveur
+    Utilisateur->>Navigateur: Ouvre le lien de l'application
+    Navigateur->>Serveur: Demande la page
+    Serveur->>Navigateur: Renvoi une page HTML formée
+    Note over Navigateur: L'application s'affiche à l'écran
+    Utilisateur->>Navigateur: Change de page
+    Navigateur->>Serveur: Demande la page
+    Serveur->>Navigateur: Renvoi une page HTML formée
+    Note over Navigateur: L'application affiche une nouvelle page
+`}
 </div>
 
 Contrairement à une SPA, je n'ai pas fait mention de "l'application" car le contenu retourné par le serveur au navigateur est déjà fonctionnel.  
@@ -91,16 +98,26 @@ Lors de l'arrivée du Javascript (mais avant le "boom"), il y avait aussi des sc
 <summary>Ici le diagramme si on prend ces scripts en compte</summary>
 
 <div className="mermaid">
-  sequenceDiagram participant Utilisateur participant Navigateur participant
-  Serveur Utilisateur->>Navigateur: Ouvre le lien de l'application
-  Navigateur->>Serveur: Demande la page Serveur->>Navigateur: Renvoi une page
-  HTML formée Note over Navigateur: L'application s'affiche à l'écran
-  Navigateur->>Serveur: Demande le script Serveur->>Navigateur: Renvoi le script
-  Note over Navigateur: Exécute le script Utilisateur->>Navigateur: Change de
-  page Navigateur->>Serveur: Demande la page Serveur->>Navigateur: Renvoi une
-  page HTML formée Note over Navigateur: L'application affiche une nouvelle page
-  Navigateur->>Serveur: Demande le script Serveur->>Navigateur: Renvoi le script
-  Note over Navigateur: Exécute le script
+  {`
+sequenceDiagram
+    participant Utilisateur
+    participant Navigateur
+    participant Serveur
+    Utilisateur->>Navigateur: Ouvre le lien de l'application
+    Navigateur->>Serveur: Demande la page
+    Serveur->>Navigateur: Renvoi une page HTML formée
+    Note over Navigateur: L'application s'affiche à l'écran
+    Navigateur->>Serveur: Demande le script
+    Serveur->>Navigateur: Renvoi le script
+    Note over Navigateur: Exécute le script
+    Utilisateur->>Navigateur: Change de page
+    Navigateur->>Serveur: Demande la page
+    Serveur->>Navigateur: Renvoi une page HTML formée
+    Note over Navigateur: L'application affiche une nouvelle page
+    Navigateur->>Serveur: Demande le script
+    Serveur->>Navigateur: Renvoi le script
+    Note over Navigateur: Exécute le script
+`}
 </div>
 
 A noter que dans la plupart des cas, ces scripts ne sont pas bloquant donc l'utilisateur peut changer de page avant de recevoir les scripts.
@@ -126,17 +143,26 @@ Reprenons les deux diagrammes avec une lecture et une sauvegarde d'une entité e
 Tout d'abord en SSR :
 
 <div className="mermaid">
-  sequenceDiagram participant Utilisateur participant Navigateur participant
-  Serveur Utilisateur->>Navigateur: Ouvre le lien de l'application
-  Navigateur->>Serveur: Demande la page Note over Serveur: Récupère la liste des
-  entités en base Serveur->>Navigateur: Renvoi une page HTML avec la liste
-  Utilisateur->>Navigateur: Ouvre la page d'une entité Navigateur->>Serveur:
-  Demande la page Note over Serveur: Récupère l'entité en base
-  Serveur->>Navigateur: Renvoi une page HTML avec les informations Note over
-  Utilisateur: Modifie les champs Utilisateur->>Navigateur: Clique sur
-  Sauvegarder Navigateur->>Serveur: Envoi les nouvelles données Note over
-  Serveur: Modifie l'entité en base Note over Serveur: Récupère la liste des
-  entités en base Serveur->>Navigateur: Renvoi une page HTML avec la liste
+  {`
+sequenceDiagram
+    participant Utilisateur
+    participant Navigateur
+    participant Serveur
+    Utilisateur->>Navigateur: Ouvre le lien de l'application
+    Navigateur->>Serveur: Demande la page
+    Note over Serveur: Récupère la liste des entités en base
+    Serveur->>Navigateur: Renvoi une page HTML avec la liste
+    Utilisateur->>Navigateur: Ouvre la page d'une entité
+    Navigateur->>Serveur: Demande la page
+    Note over Serveur: Récupère l'entité en base
+    Serveur->>Navigateur: Renvoi une page HTML avec les informations
+    Note over Utilisateur: Modifie les champs
+    Utilisateur->>Navigateur: Clique sur Sauvegarder
+    Navigateur->>Serveur: Envoi les nouvelles données
+    Note over Serveur: Modifie l'entité en base
+    Note over Serveur: Récupère la liste des entités en base
+    Serveur->>Navigateur: Renvoi une page HTML avec la liste
+`}
 </div>
 
 On peut voir que le changement n'est pas très conséquent. Puisqu'on fait un aller-retour serveur pour changer de page, on en profite pour récupérer les informations depuis la base de données pour former la page qu'on va renvoyer.
@@ -144,26 +170,42 @@ On peut voir que le changement n'est pas très conséquent. Puisqu'on fait un al
 Regardons maintenant ce fonctionnement avec une SPA :
 
 <div className="mermaid">
-  sequenceDiagram participant Utilisateur participant Application participant
-  Navigateur participant Serveur Utilisateur->>Navigateur: Ouvre le lien de
-  l'application Navigateur->>Serveur: Demande la page Serveur->>Navigateur:
-  Renvoi une page HTML Note right of Navigateur: Le HTML contient une balise
-  script Navigateur->>Serveur: Demande le script Serveur->>Navigateur: Renvoi le
-  script Navigateur->>Application: Exécute le script Note over Application:
-  L'application s'affiche à l'écran Note over Application: Affiche un spinner
-  Application->>Serveur: Demande la liste des entités Note over Serveur:
-  Récupère la liste en base Serveur->>Application: Envoi la liste des entités
-  Note over Application: Affiche la liste Utilisateur->>Application: Ouvre la
-  page d'une entité Note over Application: Affiche un spinner
-  Application->>Serveur: Demande l'entité Note over Serveur: Récupère l'entité
-  en base Serveur->>Application: Envoi l'entité Note over Application: Affiche
-  l'entité Note over Utilisateur: Modifie des champs Utilisateur->>Application:
-  Clique sur Sauvegarder Note over Application: Affiche un spinner
-  Application->>Serveur: Envoi les nouvelles données Note over Serveur: Modifie
-  l'entité en base Serveur->>Application: Renvoi l'entité mise à jour
-  Application->>Serveur: Demande la liste des entités Note over Serveur:
-  Récupère la liste en base Serveur->>Application: Envoi la liste des entités
-  Note over Application: Affiche la liste
+  {`
+sequenceDiagram
+    participant Utilisateur
+    participant Application
+    participant Navigateur
+    participant Serveur
+    Utilisateur->>Navigateur: Ouvre le lien de l'application
+    Navigateur->>Serveur: Demande la page
+    Serveur->>Navigateur: Renvoi une page HTML
+    Note right of Navigateur: Le HTML contient une balise script
+    Navigateur->>Serveur: Demande le script
+    Serveur->>Navigateur: Renvoi le script
+    Navigateur->>Application: Exécute le script
+    Note over Application: L'application s'affiche à l'écran
+    Note over Application: Affiche un spinner
+    Application->>Serveur: Demande la liste des entités
+    Note over Serveur: Récupère la liste en base
+    Serveur->>Application: Envoi la liste des entités
+    Note over Application: Affiche la liste
+    Utilisateur->>Application: Ouvre la page d'une entité
+    Note over Application: Affiche un spinner
+    Application->>Serveur: Demande l'entité
+    Note over Serveur: Récupère l'entité en base
+    Serveur->>Application: Envoi l'entité
+    Note over Application: Affiche l'entité
+    Note over Utilisateur: Modifie des champs
+    Utilisateur->>Application: Clique sur Sauvegarder
+    Note over Application: Affiche un spinner
+    Application->>Serveur: Envoi les nouvelles données
+    Note over Serveur: Modifie l'entité en base
+    Serveur->>Application: Renvoi l'entité mise à jour
+    Application->>Serveur: Demande la liste des entités
+    Note over Serveur: Récupère la liste en base
+    Serveur->>Application: Envoi la liste des entités
+    Note over Application: Affiche la liste
+    `}
 </div>
 
 J'entend déjà : "Quentin tu es de mauvaise foi, tu veux prouver quelque chose alors tu exagère"
@@ -228,24 +270,38 @@ Et si chaque page possède une fonction coté serveur pour savoir quelles donné
 Mettons à jour notre diagramme en prenant en compte l'hydratation :
 
 <div className="mermaid">
-  sequenceDiagram participant Utilisateur participant Application participant
-  Navigateur participant Serveur Utilisateur->>Navigateur: Ouvre le lien de
-  l'application Navigateur->>Serveur: Demande la page Note over Serveur:
-  Récupère la liste des entités en base Serveur->>Navigateur: Renvoi une page
-  HTML avec la liste Note right of Navigateur: Le HTML contient une balise
-  script Utilisateur->>Navigateur: Ouvre la page d'une entité Note over
-  Application: L'utilisateur clique sur le lien avant que le script soit chargé
-  Navigateur->>Serveur: Demande la page Note over Serveur: Récupère l'entité en
-  base Serveur->>Navigateur: Renvoi une page HTML avec les informations Note
-  right of Navigateur: Le HTML contient une balise script par En parallèle Note
-  over Utilisateur: Modifie les champs Navigateur->>Serveur: Demande le script
-  Serveur->>Navigateur: Renvoi le script Navigateur->>Application: Exécute le
-  script end Note over Application: L'application est désormais fonctionelle
-  coté client Utilisateur->>Application: Clique sur Sauvegarder Note over
-  Application: Affiche un spinner Application->>Serveur: Envoi les nouvelles
-  données Note over Serveur: Modifie l'entité en base Note over Serveur:
-  Récupère la liste des entités en base Serveur->>Application: Renvoi la liste
-  sérialisée Note over Application: L'application affiche la liste
+  {`
+sequenceDiagram
+    participant Utilisateur
+    participant Application
+    participant Navigateur
+    participant Serveur
+    Utilisateur->>Navigateur: Ouvre le lien de l'application
+    Navigateur->>Serveur: Demande la page
+    Note over Serveur: Récupère la liste des entités en base
+    Serveur->>Navigateur: Renvoi une page HTML avec la liste
+    Note right of Navigateur: Le HTML contient une balise script
+    Utilisateur->>Navigateur: Ouvre la page d'une entité
+    Note over Application: L'utilisateur clique sur le lien avant que le script soit chargé
+    Navigateur->>Serveur: Demande la page
+    Note over Serveur: Récupère l'entité en base
+    Serveur->>Navigateur: Renvoi une page HTML avec les informations
+    Note right of Navigateur: Le HTML contient une balise script
+    par En parallèle
+      Note over Utilisateur: Modifie les champs
+      Navigateur->>Serveur: Demande le script
+      Serveur->>Navigateur: Renvoi le script
+      Navigateur->>Application: Exécute le script
+    end
+    Note over Application: L'application est désormais fonctionelle coté client
+    Utilisateur->>Application: Clique sur Sauvegarder
+    Note over Application: Affiche un spinner
+    Application->>Serveur: Envoi les nouvelles données
+    Note over Serveur: Modifie l'entité en base
+    Note over Serveur: Récupère la liste des entités en base
+    Serveur->>Application: Renvoi la liste sérialisée
+    Note over Application: L'application affiche la liste
+`}
 </div>
 
 3 actions de l'utilisateur -> 4 aller-retour dont 1 optionnel (le script pour l'hydration)
