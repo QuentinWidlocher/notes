@@ -6,6 +6,7 @@ cover:
   src: https://images.pexels.com/photos/26681/pexels-photo-26681.jpg
   alt: Unrelated picture of the sea, by Clem Onojeghuo
 lang: fr
+withMermaid: true
 ---
 
 Si vous suivez les dernières méthodes pour créer des sites et des applications web, vous avez sans doute déjà entendu parler de *Server Side Rendering*, de *Hydration* et autres *Island Architecture*. Si ce n'est pas le cas, c'est le bon article pour vous. Si c'est le cas, restez si vous voulez en apprendre un peu plus !
@@ -69,7 +70,7 @@ Avant Javascript, c'était PHP qui était sur le devant de la scène, et PHP c'�
 
 Si on reprend le diagramme du dessus à la mode PHP (SSR) ça nous donne :
 
-```mermaid
+<div className="mermaid">
 sequenceDiagram
     participant Utilisateur
     participant Navigateur
@@ -82,7 +83,7 @@ sequenceDiagram
     Navigateur->>Serveur: Demande la page
     Serveur->>Navigateur: Renvoi une page HTML formée
     Note over Navigateur: L'application affiche une nouvelle page
-```
+</div>
 
 Contrairement à une SPA, je n'ai pas fait mention de "l'application" car le contenu retourné par le serveur au navigateur est déjà fonctionnel.  
 Un changement de page est géré nativement par le navigateur et réitère une demande au serveur.
@@ -92,7 +93,7 @@ Lors de l'arrivée du Javascript (mais avant le "boom"), il y avait aussi des sc
 <details>
 <summary>Ici le diagramme si on prend ces scripts en compte</summary>
 
-```mermaid
+<div className="mermaid">
 sequenceDiagram
     participant Utilisateur
     participant Navigateur
@@ -111,7 +112,7 @@ sequenceDiagram
     Navigateur->>Serveur: Demande le script
     Serveur->>Navigateur: Renvoi le script
     Note over Navigateur: Exécute le script
-```
+</div>
 
 A noter que dans la plupart des cas, ces scripts ne sont pas bloquant donc l'utilisateur peut changer de page avant de recevoir les scripts.
 
@@ -135,7 +136,7 @@ Reprenons les deux diagrammes avec une lecture et une sauvegarde d'une entité e
 
 Tout d'abord en SSR :
 
-```mermaid
+<div className="mermaid">
 sequenceDiagram
     participant Utilisateur
     participant Navigateur
@@ -154,13 +155,13 @@ sequenceDiagram
     Note over Serveur: Modifie l'entité en base
     Note over Serveur: Récupère la liste des entités en base
     Serveur->>Navigateur: Renvoi une page HTML avec la liste
-```
+</div>
 
 On peut voir que le changement n'est pas très conséquent. Puisqu'on fait un aller-retour serveur pour changer de page, on en profite pour récupérer les informations depuis la base de données pour former la page qu'on va renvoyer.
 
 Regardons maintenant ce fonctionnement avec une SPA :
 
-```mermaid
+<div className="mermaid">
 sequenceDiagram
     participant Utilisateur
     participant Application
@@ -195,7 +196,7 @@ sequenceDiagram
     Note over Serveur: Récupère la liste en base
     Serveur->>Application: Envoi la liste des entités
     Note over Application: Affiche la liste
-```
+</div>
 
 J'entend déjà : "Quentin tu es de mauvaise foi, tu veux prouver quelque chose alors tu exagère"
 
@@ -258,7 +259,7 @@ Et si chaque page possède une fonction coté serveur pour savoir quelles donné
 
 Mettons à jour notre diagramme en prenant en compte l'hydratation :
 
-```mermaid
+<div className="mermaid">
 sequenceDiagram
     participant Utilisateur
     participant Application
@@ -289,7 +290,7 @@ sequenceDiagram
     Note over Serveur: Récupère la liste des entités en base
     Serveur->>Application: Renvoi la liste sérialisée
     Note over Application: L'application affiche la liste
-```
+</div>
 
 3 actions de l'utilisateur -> 4 aller-retour dont 1 optionnel (le script pour l'hydration)
 
