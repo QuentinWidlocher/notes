@@ -34,8 +34,8 @@ Une fois récupéré, ce script va pouvoir commencer à afficher des information
 
 On peux faire un diagramme pour se représenter le fonctionnement :
 
-<Mermaid
-  graph={`
+<Mermaid>
+  {`
 sequenceDiagram
   participant Utilisateur
   participant Application
@@ -52,7 +52,7 @@ sequenceDiagram
   Utilisateur->>Application: Change de page
   Note over Application: L'application affiche une nouvelle page
 `}
-/>
+</Mermaid>
 
 Ici, je fait la distinction entre le _navigateur_ et _l'application_ :
 
