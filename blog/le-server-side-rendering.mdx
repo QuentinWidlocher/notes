@@ -72,8 +72,8 @@ Avant Javascript, c'était PHP qui était sur le devant de la scène, et PHP c'�
 
 Si on reprend le diagramme du dessus à la mode PHP (SSR) ça nous donne :
 
-<div className="mermaid">
-  {`
+<Mermaid
+  graph={`
 sequenceDiagram
     participant Utilisateur
     participant Navigateur
@@ -87,7 +87,7 @@ sequenceDiagram
     Serveur->>Navigateur: Renvoi une page HTML formée
     Note over Navigateur: L'application affiche une nouvelle page
 `}
-</div>
+/>
 
 Contrairement à une SPA, je n'ai pas fait mention de "l'application" car le contenu retourné par le serveur au navigateur est déjà fonctionnel.  
 Un changement de page est géré nativement par le navigateur et réitère une demande au serveur.
@@ -97,8 +97,8 @@ Lors de l'arrivée du Javascript (mais avant le "boom"), il y avait aussi des sc
 <details>
 <summary>Ici le diagramme si on prend ces scripts en compte</summary>
 
-<div className="mermaid">
-  {`
+<Mermaid
+  graph={`
 sequenceDiagram
     participant Utilisateur
     participant Navigateur
@@ -118,7 +118,7 @@ sequenceDiagram
     Serveur->>Navigateur: Renvoi le script
     Note over Navigateur: Exécute le script
 `}
-</div>
+/>
 
 A noter que dans la plupart des cas, ces scripts ne sont pas bloquant donc l'utilisateur peut changer de page avant de recevoir les scripts.
 
@@ -142,8 +142,8 @@ Reprenons les deux diagrammes avec une lecture et une sauvegarde d'une entité e
 
 Tout d'abord en SSR :
 
-<div className="mermaid">
-  {`
+<Mermaid
+  graph={`
 sequenceDiagram
     participant Utilisateur
     participant Navigateur
@@ -163,14 +163,14 @@ sequenceDiagram
     Note over Serveur: Récupère la liste des entités en base
     Serveur->>Navigateur: Renvoi une page HTML avec la liste
 `}
-</div>
+/>
 
 On peut voir que le changement n'est pas très conséquent. Puisqu'on fait un aller-retour serveur pour changer de page, on en profite pour récupérer les informations depuis la base de données pour former la page qu'on va renvoyer.
 
 Regardons maintenant ce fonctionnement avec une SPA :
 
-<div className="mermaid">
-  {`
+<Mermaid
+  graph={`
 sequenceDiagram
     participant Utilisateur
     participant Application
@@ -206,7 +206,7 @@ sequenceDiagram
     Serveur->>Application: Envoi la liste des entités
     Note over Application: Affiche la liste
     `}
-</div>
+/>
 
 J'entend déjà : "Quentin tu es de mauvaise foi, tu veux prouver quelque chose alors tu exagère"
 
@@ -269,8 +269,8 @@ Et si chaque page possède une fonction coté serveur pour savoir quelles donné
 
 Mettons à jour notre diagramme en prenant en compte l'hydratation :
 
-<div className="mermaid">
-  {`
+<Mermaid
+  graph={`
 sequenceDiagram
     participant Utilisateur
     participant Application
@@ -302,7 +302,7 @@ sequenceDiagram
     Serveur->>Application: Renvoi la liste sérialisée
     Note over Application: L'application affiche la liste
 `}
-</div>
+/>
 
 3 actions de l'utilisateur -> 4 aller-retour dont 1 optionnel (le script pour l'hydration)
 
