@@ -1,9 +1,13 @@
 {
-	"spellright.language": ["fr", "en"],
-	"spellright.documentTypes": ["markdown", "latex", "plaintext", "mdx"],
-	"spellright.parserByClass": {
-		"mdx": {
-			"parser": "markdown"
-		}
-	}
+  "spellright.language": [
+    "English (American)",
+    "fr-FR-3-0.",
+    "fr_FR (all variants)"
+  ],
+  "spellright.documentTypes": ["markdown", "latex", "plaintext", "mdx"],
+  "spellright.parserByClass": {
+    "mdx": {
+      "parser": "markdown"
+    }
+  }
 }
