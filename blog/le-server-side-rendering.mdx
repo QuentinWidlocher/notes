@@ -342,7 +342,7 @@ Il y a a BEAUCOUP de frameworks SSR qui sont arrivé ces derniers mois. Je ne sa
 Sinon petit topo des frameworks SSR disponibles :
 
 | Framework SSR                                           | Basé sur      | Environnement          | Hydratation partielle | Gère les mutations SSR | Mon avis en un emoji |
-| ------------------------------------------------------- | ------------- | ---------------------- | --------------------- | ---------------------- | -------------------- |
+| ------------------------------------------------------- | ------------- | ---------------------- | --------------------- | ---------------------- | :------------------: |
 | [Remix](https://remix.run/)                             | React         | Node, Deno, CF Workers | Non                   | Oui                    | ❤️                   |
 | [Astro](https://astro.build/)                           | Un peu tout\* | Node, Deno, CF Workers | Oui                   | Non                    | 💪                   |
 | [Next.js](https://nextjs.org/)                          | React         | Node                   | Non                   | Non                    | 👌                   |
@@ -350,6 +350,7 @@ Sinon petit topo des frameworks SSR disponibles :
 | [SvelteKit](https://kit.svelte.dev/)                    | Svelte        | Node                   | Non                   | Oui                    | 😮                   |
 | [Fresh](https://fresh.deno.dev/)                        | Preact        | Deno                   | Oui                   | Oui                    | 🙂                   |
 | [SolidStart](https://github.com/solidjs/solid-start)    | Solid         | Node                   | Probablement          | Oui                    | ⏳                   |
+| [QwikCity](https://qwik.builder.io/qwikcity/overview/)  | Qwik          | Node                   | Mieux, résumabilité\* | Oui                    | 📈                   |
 | [Angular Universal](https://angular.io/guide/universal) | Angular       | Node                   | Non                   | Non                    | 😂                   |
 
 \* React, Preact, Svelte, Vue, Solid, Lit et plus
@@ -358,6 +359,7 @@ Quelques précisions :
 
 - _CF Worker_ (CloudFlare) c'est un environnement spécial qui n'est pas Node et qui est fait pour tourner sur des CDN.
 - _Gère les mutations SSR_ ça sous entend : "possède un mécanisme pour envoyer des données au serveur et pas seulement en recevoir" (ce qui est très important pour profiter des avantages du SSR selon moi)
-- SolidStart est loin d'être prêt encore, mais il promet beaucoup
 - SvelteKit c'est super cool, j'aime pas trop Svelte mais l'approche est super propre.
+- SolidStart est loin d'être prêt encore, mais il promet beaucoup
+- QwikCity utilise le système de résumabilité pour pallier aux problèmes d'hydratation, mais c'est un autre sujet tout à fait à part encore
 - J'ai ajouté Angular Universal, mais sans blague, c'est pas fait pour faire du SSR comme je viens de le présenter, si vous utilisez Angular c'est du CSR qu'il vous faut quoi qu'il arrive.
